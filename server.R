@@ -146,6 +146,16 @@ output$blastDataTable <- renderDT({
     }
   )
 
+
+# About tab ---------------------------------------------------------------
+
+output$random_image  <- renderUI({
+  # Return a list
+  randVal <- floor(runif(n = 1, min = 1, max = 6.999))
+  tags$img(src =paste0(randVal, ".jpg"))
+
+})
+  
 } 
 
 

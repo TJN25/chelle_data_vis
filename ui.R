@@ -1,5 +1,6 @@
 library(shinyjs)
 library(shinyalert)
+library(fontawesome)
 
 jsCode <- '
 shinyjs.backgroundCol = function(params) {
@@ -17,25 +18,33 @@ tags$style(type="text/css",
            ".shiny-output-error:before { visibility: hidden; }"
 )
 
+titleData <- tags$a(href="https://www.nature.com/articles/s41598-021-03307-7",
+                     icon("volcano"),
+                    "Beads Vis", target="_blank")
+
 ui <- dashboardPage(
 
                
-                    dashboardHeader(title = "Data Vis"),
+                    dashboardHeader(title = titleData, titleWidth = 350),
                     dashboardSidebar(width = 350,
                                      sidebarMenu(id = "tabs",
-                                                 menuItem("Data input", tabName = "data_input_tab", icon = icon("th")
-                                                 ),
-                                                 menuItem("Plots",tabName =  "plots_tab",
+                                                 menuItem("Plots",tabName =  "plots_tab", icon = icon("chart-bar"),
                                                           menuSubItem(text = "Segments by colour", "plot_1"),
                                                           menuSubItem(text = "Columns and rows analysis", tabName = "plot_2"),
                                                           menuSubItem(text = "Progression", tabName = "plot_3")),
-                                                 menuItem("View Data",tabName =  "data_view_tab")
+                                                 menuItem("Data input", tabName = "data_input_tab", icon = icon("pen")
+                                                 ),
+                                                 
+                                                 menuItem("View Data",tabName =  "data_view_tab", icon = icon("table")),
+                                                 menuItem("About", tabName = "about_tab", icon = icon("circle-info"))
                                      )
                     ),
                     dashboardBody(
                       useShinyjs(),
-                      useShinyalert(),
                       extendShinyjs(text  = jsCode, functions = 'backgroundCol'),
+                      tags$head(
+                        tags$link(rel = "stylesheet", type = "text/css", href = "custom1.css")
+                      ),
                       tabItems(
                         tabItem(tabName = "data_input_tab", helpText("Input Data"),
                                 helpText("SAVING DATA IS VERY SLOW! PLEASE BE PATIENT (It's Google's fault and very little can be done by me to fix it)!"),
@@ -145,7 +154,16 @@ ui <- dashboardPage(
                         tabItem(tabName = "data_view_tab",
                                 DTOutput("blastDataTable"),
                                 downloadButton("downloadData", "Download")
-                        )
+                        ),
+                        tabItem(tabName = "about_tab",
+                                uiOutput(outputId = "random_image"),
+                                helpText("Data gather and science thinking stuff done by MK Fitzgerald."),
+                                helpText("Code for the app written by Dr TJ Nicholson."),
+                                tags$a(href="https://github.com/TJN25/chelle_data_vis", 
+                                       "Source code is available here"),
+                                helpText(""),
+                                tags$a(href="https://github.com/TJN25/chelle_data_vis/issues", 
+                                       "Support and discussion"))
                       )
                     )
 

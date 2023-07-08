@@ -62,6 +62,7 @@ plotCombined <- function(plotData){
                      ncol = 3, nrow = 3)
   return(all.p)
 }
+
 plotRows <- function(plotData, stackColours = F){
   r1c1 <- plotSegment(plotData, rowVal = 1, colVal = 1, byColour = T, stackColours = stackColours, combineRows = T)
   r1c2 <- plotSegment(plotData, rowVal = 1, colVal = 2, byColour = T, stackColours = stackColours, combineRows = T)
@@ -174,6 +175,7 @@ pointsPlotPerBlast <- function(allBlasts, blastCountVal){
     theme_bw()
   return(p)
 }
+
 plotBlastPoints <- function(allBlasts){
   if(max(allBlasts$blast_count) == 1){  
     p0 <- pointsPlotPerBlast(allBlasts, 0)
