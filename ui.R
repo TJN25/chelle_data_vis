@@ -157,7 +157,7 @@ ui <- dashboardPage(
                         ),
                         tabItem(tabName = "about_tab",
                                 uiOutput(outputId = "random_image"),
-                                helpText("Data gather and science thinking stuff done by MK Fitzgerald."),
+                                helpText("Data gathering and science thinking stuff performed by MK Fitzgerald."),
                                 helpText("Code for the app written by Dr TJ Nicholson."),
                                 tags$a(href="https://github.com/TJN25/chelle_data_vis", 
                                        "Source code is available here"),
