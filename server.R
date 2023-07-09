@@ -72,6 +72,8 @@ output$progression_plot <- renderPlot({
 
 output$progression_plot_1 <- renderPlot({
   plotData <- plotData()
+  print(colnames(plotData))
+  print(colnames(zeroBlasts))
   plotData <- plotData %>% rbind(zeroBlasts)
   selectedData <- selectData(plotData, runVals = c(1,2), blastCounts = c(0,1) , blastLengths = as.numeric(1))
   allBlasts <- animateBlasts(selectedData, input$y.height, input$y.variance, input$hide_unchanged_data)
