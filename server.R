@@ -29,6 +29,10 @@ server <- function(input, output, session) {
     selectInput(inputId = 'blast_length_plot_combined', label = "Duration of blasts", choices = inputVariables()$blast_duration, selected = inputVariables()$blast_duration[1], multiple = T)
   })
   
+  output$blast_length_plot_progresion_input <- renderUI({
+    selectInput(inputId = 'blast_length_plot_progresion', label = "Blast length (seconds)", choices = inputVariables()$blast_duration, selected = inputVariables()$blast_duration, multiple = T)
+  })
+  
 # Data input --------------------------------------------------------------
   setBackgroudColourCustom()
   dataInputReactive <- reactiveValues()
@@ -92,6 +96,17 @@ output$columns_and_rows_plot <- renderPlot({
   
 })
 
+output$progression_plot_all <- renderPlot({
+  plotData <- plotData()
+  plotData <- plotData %>% rbind(zeroBlasts)
+  selectedData <- selectData(plotData, runVals = inputVariables()$run, blastCounts = c(0, inputVariables()$blast_count), blastLengths = as.numeric(input$blast_length_plot_progresion))
+  allBlasts <- animateBlasts(selectedData, input$y.height, input$y.variance, input$hide_unchanged_data)
+  plotBlastPoints(allBlasts, allDurations = T)
+})
+
+output$progression_plot_output <- renderUI({
+  plotOutput(outputId = "progression_plot_all", height = paste0(input$progression_plot_height, "px"))
+})
 
 output$progression_plot <- renderPlot({
   plotData <- plotData()

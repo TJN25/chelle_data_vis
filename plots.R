@@ -116,25 +116,32 @@ generatePoints <- function(plotData, rowVal, colVal, blastVal, y.height, y.varia
 }
 
 animateBlasts <- function(plotData, y.height, y.variance, hideUnchanged) {
-allBlasts <- data.frame(x = 0, y = 0 , colour = "white", use_colour = "#FFFFFF", blast_count = -1)
-blastCountValues <- sort(unique(plotData$blast_count))
+allBlasts <- data.frame(x = 0, y = 0 , colour = "white", use_colour = "#FFFFFF", blast_count = -1, blast_duration = -1)
 
+blastDurations <- sort(unique(plotData$blast_duration))
+
+for(duration in blastDurations){
+  selectedData <- plotData %>% filter(blast_duration == duration)
+  blastCountValues <- sort(unique(selectedData$blast_count))
 for(b in blastCountValues){
   
-dat <- data.frame(x = 0, y = 0 , colour = "white", use_colour = "#FFFFFF", blast_count = -1)
+dat <- data.frame(x = 0, y = 0 , colour = "white", use_colour = "#FFFFFF", blast_count = -1, blast_duration = -1)
 for(i in 1:3){
   for(j in 1:3){
     if(b == 0){
-      tmp <- generatePoints(plotData, rowVal = i, colVal = j, blastVal = b, y.height, y.variance)
+      tmp <- generatePoints(selectedData, rowVal = i, colVal = j, blastVal = b, y.height, y.variance)
+      tmp$blast_duration <- duration
       dat <- dat %>% rbind(tmp)
     }else{
-      tmp <- generatePoints(plotData, rowVal = i, colVal = j, blastVal = b)
+      tmp <- generatePoints(selectedData, rowVal = i, colVal = j, blastVal = b)
+      tmp$blast_duration <- duration
       dat <- dat %>% rbind(tmp)
     }
     
   }
 }
 allBlasts <- allBlasts %>%  rbind(dat)
+}
 }
 
 if(hideUnchanged){
@@ -159,7 +166,32 @@ pointsPlotPerBlast <- function(allBlasts, blastCountVal){
   return(p)
 }
 
-plotBlastPoints <- function(allBlasts){
+plotBlastPoints <- function(allBlasts, allDurations = F){
+  if(allDurations){
+  blastDurations <- sort(unique(allBlasts$blast_duration))
+  blastDurations <- blastDurations[blastDurations != -1]
+  numDurations <- length(blastDurations)
+  plotCounts <- allBlasts %>% select(blast_count, blast_duration) %>%  unique() %>% nrow()
+  maxCounts <- max(allBlasts$blast_count)
+  
+  plotList <- list()
+  counter <- 0
+  for(b in blastDurations){
+    selectedData <- allBlasts %>% filter(blast_duration == b)
+    blastCounts <- sort(unique(selectedData$blast_count))
+    print(blastCounts)
+    for(counts in blastCounts){
+      counter <- counter + 1
+      pp <- pointsPlotPerBlast(selectedData, counts)
+      plotList[[counter]] <- pp
+    }
+  }
+  print(plotList)
+  all.p <- ggarrange(plotlist = plotList, ncol = maxCounts + 1, nrow = numDurations)
+  return(all.p)
+  
+  }else{
+    
   if(max(allBlasts$blast_count) == 1){  
     p0 <- pointsPlotPerBlast(allBlasts, 0)
     p1 <- pointsPlotPerBlast(allBlasts, 1)
@@ -170,13 +202,14 @@ plotBlastPoints <- function(allBlasts){
     p1 <- pointsPlotPerBlast(allBlasts, 1)
     p2 <- pointsPlotPerBlast(allBlasts, 2)
     p3 <- pointsPlotPerBlast(allBlasts, 3)
-    all.p <- ggarrange(p0, p1, p2, p3 + rremove("x.text"),
+    plotList <- list(p0, p1, p2, p3)
+    all.p <- ggarrange(plotlist = plotList,
                        ncol = 4, nrow = 1)
   }
   
   
  
   return(all.p)
-  
+  }
   
 }
