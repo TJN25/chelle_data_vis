@@ -31,6 +31,7 @@ options(
   # specify auth tokens should be stored in a hidden directory ".secrets"
   gargle_oauth_cache = ".secrets"
 )
+options(dplyr.summarise.inform = FALSE)
 
 drive_download(as_id("1LyYpiXYSkXKnEyGCRjbJy0_x2iNKLchY"), path = "tmp/mainData.Rda", overwrite = T)
 drive_download(as_id("16DEmrdQyj0hjUU83Iof4B1A79CAXx-YT"), path = "tmp/metaData.Rda", overwrite = T)

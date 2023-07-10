@@ -2,7 +2,32 @@ options(warn = -1)
 
 server <- function(input, output, session) {
 
+
+# Input selectors ---------------------------------------------------------
+
+  output$replicate_plot_input <- renderUI({
+    selectInput(inputId = 'replicate_plot', label = "Run", choices = inputVariables()$run, selected = inputVariables()$run[1], multiple = T)
+  })
   
+  output$blast_count_plot_input <- renderUI({
+    selectInput(inputId = 'blast_count_plot', label = "Number of blasts", choices = inputVariables()$blast_count, selected = inputVariables()$blast_count[1], multiple = T)
+  })
+  
+  output$blast_duration_plot_input <- renderUI({
+    selectInput(inputId = 'blast_length_plot', label = "Duration of blasts", choices = inputVariables()$blast_duration, selected = inputVariables()$blast_duration[1], multiple = T)
+  })
+  
+  output$replicate_plot_combined_input <- renderUI({
+    selectInput(inputId = 'replicate_plot_combined', label = "Run", choices = inputVariables()$run, selected = inputVariables()$run[1], multiple = T)
+  })
+  
+  output$blast_count_plot_combined_input <- renderUI({
+    selectInput(inputId = 'blast_count_plot_combined', label = "Number of blasts", choices = inputVariables()$blast_count, selected = inputVariables()$blast_count[1], multiple = T)
+  })
+  
+  output$blast_duration_plot_combined_input <- renderUI({
+    selectInput(inputId = 'blast_length_plot_combined', label = "Duration of blasts", choices = inputVariables()$blast_duration, selected = inputVariables()$blast_duration[1], multiple = T)
+  })
   
 # Data input --------------------------------------------------------------
   setBackgroudColourCustom()
@@ -44,6 +69,14 @@ server <- function(input, output, session) {
     plotData <- friendlyId(plotData)
     plotData
   })
+  inputVariables <- reactive({
+    ll  <- list()
+    ll$run <- sort(unique(plotData()$run))
+    ll$blast_count <- sort(unique(plotData()$blast_count))
+    ll$blast_duration <- sort(unique(plotData()$blast_duration))
+    ll
+  } 
+  )
   
 output$all_bar_plots <- renderPlot({
   plotData <- plotData()
@@ -72,8 +105,6 @@ output$progression_plot <- renderPlot({
 
 output$progression_plot_1 <- renderPlot({
   plotData <- plotData()
-  print(colnames(plotData))
-  print(colnames(zeroBlasts))
   plotData <- plotData %>% rbind(zeroBlasts)
   selectedData <- selectData(plotData, runVals = c(1,2), blastCounts = c(0,1) , blastLengths = as.numeric(1))
   allBlasts <- animateBlasts(selectedData, input$y.height, input$y.variance, input$hide_unchanged_data)

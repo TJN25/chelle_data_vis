@@ -117,8 +117,9 @@ generatePoints <- function(plotData, rowVal, colVal, blastVal, y.height, y.varia
 
 animateBlasts <- function(plotData, y.height, y.variance, hideUnchanged) {
 allBlasts <- data.frame(x = 0, y = 0 , colour = "white", use_colour = "#FFFFFF", blast_count = -1)
-if(max(plotData$blast_count) == 1){
-for(b in 0:1){
+blastCountValues <- sort(unique(plotData$blast_count))
+
+for(b in blastCountValues){
   
 dat <- data.frame(x = 0, y = 0 , colour = "white", use_colour = "#FFFFFF", blast_count = -1)
 for(i in 1:3){
@@ -135,25 +136,7 @@ for(i in 1:3){
 }
 allBlasts <- allBlasts %>%  rbind(dat)
 }
-}else{
-  for(b in 0:3){
-    
-    dat <- data.frame(x = 0, y = 0 , colour = "white", use_colour = "#FFFFFF", blast_count = -1)
-    for(i in 1:3){
-      for(j in 1:3){
-        if(b == 0){
-          tmp <- generatePoints(plotData, rowVal = i, colVal = j, blastVal = b, y.height, y.variance)
-          dat <- dat %>% rbind(tmp)
-        }else{
-          tmp <- generatePoints(plotData, rowVal = i, colVal = j, blastVal = b)
-          dat <- dat %>% rbind(tmp)
-        }
-        
-      }
-    }
-    allBlasts <- allBlasts %>%  rbind(dat)
-  }
-}
+
 if(hideUnchanged){
   allBlasts <- allBlasts %>%  mutate(keep = ifelse(blast_count == 0, T, 
                                                    ifelse(colour == "yellow", ifelse(y > 2, F, T),

@@ -104,8 +104,8 @@ ui <- dashboardPage(
                                 ),
                                
                                 selectInput(inputId = 'replicate', label = "Run", choices = c("-", "1", "2"), selected = "-", multiple = FALSE),
-                                selectInput(inputId = 'blast_count', label = "Number of blasts", choices = c("-", "1", "2", "3", "4"), selected = "-", multiple = FALSE),
-                                selectInput(inputId = 'blast_length', label = "Blast length (seconds)", choices = c("-", "0.1", "1"), selected = "-", multiple = FALSE),
+                                selectInput(inputId = 'blast_count', label = "Number of blasts", choices = c("-", "1", "2", "3", "4", "5", "6", "7", "8"), selected = "-", multiple = FALSE),
+                                selectInput(inputId = 'blast_length', label = "Blast length (seconds)", choices = c("-", "0.1", "1", "2", "3", "4"), selected = "-", multiple = FALSE),
                                 actionButton(inputId = "save_data", label = "Add data"),
                                 textOutput('data_input_help_message')
                         ),
@@ -115,9 +115,10 @@ ui <- dashboardPage(
                                 textOutput(outputId = "segment_text"),
                                 plotOutput(outputId = "all_bar_plots", height = "1000px", click = "segments_click", hover = hoverOpts(id = "segments_hover")),
                                 fluidRow(
-                                column(width = 3, selectInput(inputId = 'replicate_plot', label = "Run", choices = c("1", "2"), selected = "1", multiple = T)),
-                                column(width = 3, selectInput(inputId = 'blast_count_plot', label = "Number of blasts", choices = c("1", "2", "3", "4"), selected = "1", multiple = T)),
-                                column(width = 3, selectInput(inputId = 'blast_length_plot', label = "Blast length (seconds)", choices = c("0.1", "1"), selected = "0.1", multiple = T))
+                                column(width = 3, uiOutput(outputId = "replicate_plot_input")),
+                                column(width = 3, uiOutput(outputId = "blast_count_plot_input")),
+                                column(width = 3, uiOutput(outputId = "blast_duration_plot_input")),
+                                
                                 ),
                                 fluidRow(
                                   column(width = 2, checkboxInput(inputId = "stack_colours_plot", label = "Stack colours", value = F)),
@@ -130,9 +131,10 @@ ui <- dashboardPage(
                                 textOutput(outputId = "column_text"),
                                 plotOutput(outputId = "columns_and_rows_plot", height = "1000px", click = "columns_click", hover = hoverOpts(id = "columns_hover")),
                                 fluidRow(
-                                  column(width = 3, selectInput(inputId = 'replicate_plot_combined', label = "Run", choices = c("1", "2"), selected = "1", multiple = T)),
-                                  column(width = 3, selectInput(inputId = 'blast_count_plot_combined', label = "Number of blasts", choices = c("1", "2", "3", "4"), selected = "1", multiple = T)),
-                                  column(width = 3, selectInput(inputId = 'blast_length_plot_combined', label = "Blast length (seconds)", choices = c("0.1", "1"), selected = "0.1", multiple = T))
+                                  column(width = 3, uiOutput(outputId = "replicate_plot_combined_input")),
+                                  column(width = 3, uiOutput(outputId = "blast_count_plot_combined_input")),
+                                  column(width = 3, uiOutput(outputId = "blast_duration_plot_combined_input")),
+                                  
                                 ),
                                 fluidRow(
                                   column(width = 2, checkboxInput(inputId = "stack_colours_plot_column", label = "Stack colours", value = T)),
