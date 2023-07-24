@@ -144,14 +144,12 @@ ui <- dashboardPage(
                         
                         tabItem(tabName = "plot_3",
                                 helpText('Loading is slow. For each gram of beads a point is randomly generated in the segment in which the bead was found. Starting data can be adjusted.'),
-                                textOutput(outputId = "progression_0.1_text"),
-                                textOutput(outputId = "progression_1_text"),
-                                checkboxInput(inputId = "hide_unchanged_data", label = "Hide unchanged points", value = T),
+                                fluidRow(
+                                  column(width = 2, checkboxInput(inputId = "hide_unchanged_data", label = "Hide unchanged points", value = T)),
+                                  column(width = 2, checkboxInput(inputId = "combine_replicates_progression", label = "Combine replicates", value = T))
+                                         ),
                                 sliderInput(inputId = "progression_plot_height", label = "Plot height (px)", min = 200, max = 2000, value = 800, step = 50),
                                 uiOutput(outputId = "progression_plot_output"),
-                                #plotOutput(outputId = "progression_plot", height = "600px", click = "click_0.1", hover = hoverOpts(id = "progression_hover_0.1")),
-                                #plotOutput(outputId = "progression_plot_1", height = "600px", click = "click_1", hover = hoverOpts(id = "progression_hover_0.1")),
-                                uiOutput(outputId = "blast_length_plot_progresion_input"),
                                 sliderInput(inputId = "y.height", label = "Adjust y position of initial data", min = 0.001, max = 0.999, value = 0.5, step = 0.01),
                                 sliderInput(inputId = "y.variance", label = "Adjust y variance of initial data", min = 0.001, max = 0.999, value = 0.1, step = 0.01)
                         ),

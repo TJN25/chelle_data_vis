@@ -54,6 +54,8 @@ selectData <- function(plotData, runVals, blastCounts, blastLengths, combineRepl
   }else{
   dat <- dat[dat$run %in% runVals,]
   dat <- dat[dat$blast_count %in% blastCounts,]
+    print(unique(dat$blast_duration))
+    print(blastLengths)
   dat <- dat[dat$blast_duration %in% blastLengths,]
   }
   return(dat)

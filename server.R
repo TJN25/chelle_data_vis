@@ -99,34 +99,16 @@ output$columns_and_rows_plot <- renderPlot({
 output$progression_plot_all <- renderPlot({
   plotData <- plotData()
   plotData <- plotData %>% rbind(zeroBlasts)
-  selectedData <- selectData(plotData, runVals = inputVariables()$run, blastCounts = c(0, inputVariables()$blast_count), blastLengths = as.numeric(input$blast_length_plot_progresion))
+  selectedData <- selectData(plotData, runVals = inputVariables()$run, blastCounts = c(0, inputVariables()$blast_count), blastLengths = as.numeric(inputVariables()$blast_duration))
   allBlasts <- animateBlasts(selectedData, input$y.height, input$y.variance, input$hide_unchanged_data)
-  plotBlastPoints(allBlasts, allDurations = T)
+  plotBlastPoints(allBlasts)
 })
 
 output$progression_plot_output <- renderUI({
   plotOutput(outputId = "progression_plot_all", height = paste0(input$progression_plot_height, "px"))
 })
 
-output$progression_plot <- renderPlot({
-  plotData <- plotData()
-  plotData <- plotData %>% rbind(zeroBlasts)
-  selectedData <- selectData(plotData, runVals = c(1,2), blastCounts = c(0,1,2,3) , blastLengths = as.numeric(0.1))
-  allBlasts <- animateBlasts(selectedData, input$y.height, input$y.variance, input$hide_unchanged_data)
-  plotBlastPoints(allBlasts)
-  
-  
-})
 
-output$progression_plot_1 <- renderPlot({
-  plotData <- plotData()
-  plotData <- plotData %>% rbind(zeroBlasts)
-  selectedData <- selectData(plotData, runVals = c(1,2), blastCounts = c(0,1) , blastLengths = as.numeric(1))
-  allBlasts <- animateBlasts(selectedData, input$y.height, input$y.variance, input$hide_unchanged_data)
-  plotBlastPoints(allBlasts)
-  
-  
-}) 
 
 output$segment_text <- renderText({
   textValx <- input$segments_click$x
@@ -150,27 +132,6 @@ output$column_text <- renderText({
   textVal
 })
 
-output$progression_0.1_text <- renderText({
-  textValx <- input$click_0.1$x
-  textValy <- input$click_0.1$y
-  if(is.null(textValx)){
-    textVal <- ""
-  }else{
-    textVal <- paste("x:", textValx, ", y:", textValy)
-  }
-  textVal
-})
-
-output$progression_1_text <- renderText({
-  textValx <- input$click_1$x
-  textValy <- input$click_1$y
-  if(is.null(textValx)){
-    textVal <- ""
-  }else{
-    textVal <- paste("x:", textValx, ", y:", textValy)
-  }
-  textVal
-})
 
 
 
