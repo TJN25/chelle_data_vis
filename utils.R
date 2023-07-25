@@ -35,10 +35,12 @@ weightToProportion <- function(plotData) {
   plotData <- plotData %>%  mutate(tmp.id = paste0(id, Colour))
   plotData <- plotData %>% full_join(weightTotals, by = "tmp.id") %>% select(-tmp.id)
   plotData <- plotData %>% mutate(proportion = Weight/weights)
+  return(plotData)
 }
 
 friendlyId <- function(plotData){
   plotData <- plotData %>% mutate(blast.id = paste("Replicate:", run, ", No. blasts: ", blast_count, ", Duration: ", blast_duration))
+  return(plotData)
 }
 
 selectData <- function(plotData, runVals, blastCounts, blastLengths, combineReplicates =F){
