@@ -27,6 +27,9 @@ createNewDataFrame <- function(input) {
 
 transformData <- function(blastData) {
   plotData <- blastData %>% pivot_longer(cols = c("yellow", "blue", "red")) %>% dplyr::rename(Colour = name, Weight = value)
+  plotData$run <- as.numeric(plotData$run)
+  plotData$blast_duration <- as.numeric(plotData$blast_duration)
+  plotData$blast_count <- as.numeric(plotData$blast_count)
   return(plotData)
 }
 
