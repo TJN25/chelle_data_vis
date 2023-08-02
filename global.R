@@ -21,6 +21,7 @@ source("background-colours.R")
 
 source("utils.R")
 source("utils/dataInputClass.R")
+source("utils/classTest.R")
 source("plots.R")
 
 # global variables
