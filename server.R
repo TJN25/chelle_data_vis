@@ -14,7 +14,7 @@ server <- function(input, output, session) {
   })
   
   output$blast_duration_plot_input <- renderUI({
-    selectInput(inputId = 'blast_length_plot', label = "Duration of blasts", choices = inputVariables()$blast_duration, selected = inputVariables()$blast_duration[1], multiple = T)
+    selectInput(inputId = 'blast_length_plot', label = "Duration of blasts", choices = barPlotData()@blast_durations, selected = inputVariables()$blast_duration[1], multiple = T)
   })
   
   output$replicate_plot_combined_input <- renderUI({
@@ -67,6 +67,16 @@ server <- function(input, output, session) {
 
 # Plots -------------------------------------------------------------------
 
+  barPlotData <- reactive({
+    barPlotData <- new(Class = "allBarPlotsClass", blastData = blastData)
+    barPlotData
+  })
+
+  progPlotData <- reactive({
+    progPlotData <- new(Class = "progressionPlotClass", blastData = blastData)
+    progPlotData
+  })
+  
   plotData <- reactive({
     plotData <- transformData(dataInputReactive$blastData)
     plotData <- weightToProportion(plotData)
@@ -83,10 +93,16 @@ server <- function(input, output, session) {
   )
   
 output$all_bar_plots <- renderPlot({
-  plotData <- plotData()
-  selectedData <- selectData(plotData, as.numeric(input$replicate_plot), as.numeric(input$blast_count_plot), as.numeric(input$blast_length_plot), input$combine_replicates_plot)
-  plotAll(selectedData, stackColours = input$stack_colours_plot)
-  
+  barPlotData <- barPlotData()
+  barPlotData@stack_colours <- input$stack_colours_plot
+  print(input$blast_length_plot)
+  barPlotData@blast_duration <- as.numeric(input$blast_length_plot)
+  barPlotData@blast_count <- as.numeric(input$blast_count_plot)
+  barPlotData@run <- as.numeric(input$replicate_plot)
+  barPlotData@combine_replicates <- input$combine_replicates_plot
+  barPlotData <- selectData(barPlotData)
+  barPlotData <- generatePlot(barPlotData)
+  barPlotData@p
 })
 
 output$columns_and_rows_plot <- renderPlot({
@@ -97,11 +113,16 @@ output$columns_and_rows_plot <- renderPlot({
 })
 
 output$progression_plot_all <- renderPlot({
-  plotData <- plotData()
-  plotData <- plotData %>% rbind(zeroBlasts)
-  selectedData <- selectData(plotData, runVals = inputVariables()$run, blastCounts = c(0, inputVariables()$blast_count), blastLengths = as.numeric(inputVariables()$blast_duration))
-  allBlasts <- animateBlasts(selectedData, input$y.height, input$y.variance, input$hide_unchanged_data)
-  plotBlastPoints(allBlasts)
+  progPlotData <- progPlotData()
+  progPlotData@y.height <- input$y.height
+  progPlotData@y.variance <- input$y.variance
+  progPlotData@hideUnchanged <- input$hide_unchanged_data
+  print(input$hide_unchanged_data)
+  progPlotData@combine_replicates <- input$combine_replicates_progression
+  progPlotData <- selectData(progPlotData)
+  progPlotData@simBlast <- simulateBlasts(progPlotData)
+  progPlotData <- generatePlot(progPlotData)
+  progPlotData@p 
 })
 
 output$progression_plot_output <- renderUI({

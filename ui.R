@@ -47,7 +47,7 @@ ui <- dashboardPage(
                       ),
                       tabItems(
                         tabItem(tabName = "data_input_tab", helpText("Input Data"),
-                                helpText("SAVING DATA IS VERY SLOW! PLEASE BE PATIENT (It's Google's fault and very little can be done by me to fix it)!"),
+                                helpText("DO NOT USE"),
                                 fluidRow(
                                   column(width = 4,  box(title = "", solidHeader = TRUE, width = "30%", 
                                                          column(width = 3, numericInput(inputId = "r1_c1_input_yellow", value = 0, label = "")),
@@ -104,7 +104,7 @@ ui <- dashboardPage(
                                 ),
                                
                                 selectInput(inputId = 'replicate', label = "Run", choices = c("-", "1", "2"), selected = "-", multiple = FALSE),
-                                selectInput(inputId = 'blast_count', label = "Number of blasts", choices = c("-", "1", "2", "3", "4", "5", "6", "7", "8"), selected = "-", multiple = FALSE),
+                                selectInput(inputId = 'blast_count', label = "Number of blasts", choices = c("-", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), selected = "-", multiple = FALSE),
                                 selectInput(inputId = 'blast_length', label = "Blast length (seconds)", choices = c("-", "0.1", "1", "2", "3", "4"), selected = "-", multiple = FALSE),
                                 actionButton(inputId = "save_data", label = "Add data"),
                                 textOutput('data_input_help_message')
@@ -112,6 +112,7 @@ ui <- dashboardPage(
                         
                         tabItem(tabName = "plot_1",
                                 helpText('Segments by colour'),
+                                helpText('R = Replicate, B = No. of Blasts, D = Duration'),
                                 textOutput(outputId = "segment_text"),
                                 plotOutput(outputId = "all_bar_plots", height = "1000px", click = "segments_click", hover = hoverOpts(id = "segments_hover")),
                                 fluidRow(
@@ -148,10 +149,10 @@ ui <- dashboardPage(
                                   column(width = 2, checkboxInput(inputId = "hide_unchanged_data", label = "Hide unchanged points", value = T)),
                                   column(width = 2, checkboxInput(inputId = "combine_replicates_progression", label = "Combine replicates", value = T))
                                          ),
-                                sliderInput(inputId = "progression_plot_height", label = "Plot height (px)", min = 200, max = 2000, value = 800, step = 50),
+                                sliderInput(inputId = "progression_plot_height", label = "Plot height (px)", min = 200, max = 2000, value = 650, step = 50),
                                 uiOutput(outputId = "progression_plot_output"),
                                 sliderInput(inputId = "y.height", label = "Adjust y position of initial data", min = 0.001, max = 0.999, value = 0.5, step = 0.01),
-                                sliderInput(inputId = "y.variance", label = "Adjust y variance of initial data", min = 0.001, max = 0.999, value = 0.1, step = 0.01)
+                                sliderInput(inputId = "y.variance", label = "Adjust y variance of initial data", min = 0.001, max = 0.999, value = 0.45, step = 0.01)
                         ),
                         tabItem(tabName = "data_view_tab",
                                 DTOutput("blastDataTable"),

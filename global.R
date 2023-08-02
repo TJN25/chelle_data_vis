@@ -21,8 +21,8 @@ source("background-colours.R")
 
 source("utils.R")
 source("utils/dataInputClass.R")
-source("utils/classTest.R")
-source("plots.R")
+source("utils/plotClass.R")
+#source("plots.R")
 
 # global variables
 
@@ -34,8 +34,8 @@ options(
 )
 options(dplyr.summarise.inform = FALSE)
 
-drive_download(as_id("1LyYpiXYSkXKnEyGCRjbJy0_x2iNKLchY"), path = "tmp/mainData.Rda", overwrite = T)
-drive_download(as_id("16DEmrdQyj0hjUU83Iof4B1A79CAXx-YT"), path = "tmp/metaData.Rda", overwrite = T)
+#drive_download(as_id("1LyYpiXYSkXKnEyGCRjbJy0_x2iNKLchY"), path = "tmp/mainData.Rda", overwrite = T)
+#drive_download(as_id("16DEmrdQyj0hjUU83Iof4B1A79CAXx-YT"), path = "tmp/metaData.Rda", overwrite = T)
 
 load("tmp/mainData.Rda")
 load("data/zeroBlasts.Rda")
