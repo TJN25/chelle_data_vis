@@ -40,7 +40,7 @@ setMethod(f = "saveData",
               x@mainData <- rbind(x@mainData, x@inputDataFrame)
               blastData <- x@mainData
               save(blastData, file = "tmp/mainData.Rda")
-              drive_upload(media = "tmp/mainData.Rda", path = "beads/data/mainData.Rda")
+              #drive_upload(media = "tmp/mainData.Rda", path = "beads/data/mainData.Rda")
               
             }
             return(x)
@@ -54,7 +54,7 @@ setMethod(f = "saveMetaData",
               x@checkData <- rbind(x@checkData, df)
               metaData <- x@checkData
               save(metaData, file = "tmp/metaData.Rda")
-              drive_upload(media = "tmp/metaData.Rda", path = "beads/data/metaData.Rda")
+              #drive_upload(media = "tmp/metaData.Rda", path = "beads/data/metaData.Rda")
               
             }
             return(x)
