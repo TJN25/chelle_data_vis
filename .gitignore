@@ -5,3 +5,4 @@
 rsconnect/
 .httr-oauth
 .secrets
+.DS_Store

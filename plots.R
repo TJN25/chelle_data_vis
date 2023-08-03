@@ -178,14 +178,12 @@ plotBlastPoints <- function(allBlasts){
   for(b in blastDurations){
     selectedData <- allBlasts %>% filter(blast_duration == b)
     blastCounts <- sort(unique(selectedData$blast_count))
-    print(blastCounts)
     for(counts in blastCounts){
       counter <- counter + 1
       pp <- pointsPlotPerBlast(selectedData, counts)
       plotList[[counter]] <- pp
     }
   }
-  print(plotList)
   all.p <- ggarrange(plotlist = plotList, ncol = maxCounts + 1, nrow = numDurations)
   return(all.p)
   
