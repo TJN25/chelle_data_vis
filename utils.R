@@ -25,40 +25,20 @@ createNewDataFrame <- function(input) {
   return(df)
 }
 
-transformData <- function(blastData) {
-  plotData <- blastData %>% pivot_longer(cols = c("yellow", "blue", "red")) %>% dplyr::rename(Colour = name, Weight = value)
-  return(plotData)
+durationLabel <- function(string) {
+  string <- paste0("Blast Duration: ", string)
+  string
+}
+countLabel <- function(string) {
+  string <- paste0("Blast Count: ", string)
+  string
 }
 
-weightToProportion <- function(plotData) {
-  weightTotals <- plotData %>% group_by(id, Colour) %>% summarise(weights = sum(Weight)) %>% mutate(tmp.id = paste0(id, Colour)) %>%  ungroup()%>% select(weights, tmp.id)
-  plotData <- plotData %>%  mutate(tmp.id = paste0(id, Colour))
-  plotData <- plotData %>% full_join(weightTotals, by = "tmp.id") %>% select(-tmp.id)
-  plotData <- plotData %>% mutate(proportion = Weight/weights)
-  return(plotData)
+rowLabel <- function(string) {
+  string <- paste0("Row: ", string)
+  string
 }
-
-friendlyId <- function(plotData){
-  plotData <- plotData %>% mutate(blast.id = paste("Replicate:", run, ", No. blasts: ", blast_count, ", Duration: ", blast_duration))
-  return(plotData)
-}
-
-selectData <- function(plotData, runVals, blastCounts, blastLengths, combineReplicates =F){
-  dat <- plotData
-  if(combineReplicates){
-    dat <- dat[dat$blast_count %in% blastCounts,]
-    dat <- dat[dat$blast_duration %in% blastLengths,]
-    dat <- dat %>% group_by(blast_duration, blast_count, row, column, Colour) %>% 
-      summarise(combined.weight = sum(Weight)) %>% 
-      dplyr::rename(Weight = combined.weight) %>% 
-      mutate(blast.id = paste("No. blasts: ", blast_count, ", Duration: ", blast_duration))
-      
-  }else{
-  dat <- dat[dat$run %in% runVals,]
-  dat <- dat[dat$blast_count %in% blastCounts,]
-    print(unique(dat$blast_duration))
-    print(blastLengths)
-  dat <- dat[dat$blast_duration %in% blastLengths,]
-  }
-  return(dat)
+columnLabel <- function(string) {
+  string <- paste0("Column: ", string)
+  string
 }

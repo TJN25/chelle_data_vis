@@ -112,7 +112,6 @@ ui <- dashboardPage(
                         
                         tabItem(tabName = "plot_1",
                                 helpText('Segments by colour'),
-                                helpText('R = Replicate, B = No. of Blasts, D = Duration'),
                                 textOutput(outputId = "segment_text"),
                                 plotOutput(outputId = "all_bar_plots", height = "1000px", click = "segments_click", hover = hoverOpts(id = "segments_hover")),
                                 fluidRow(
@@ -146,9 +145,11 @@ ui <- dashboardPage(
                         tabItem(tabName = "plot_3",
                                 helpText('Loading is slow. For each gram of beads a point is randomly generated in the segment in which the bead was found. Starting data can be adjusted.'),
                                 fluidRow(
-                                  column(width = 2, checkboxInput(inputId = "hide_unchanged_data", label = "Hide unchanged points", value = T)),
-                                  column(width = 2, checkboxInput(inputId = "combine_replicates_progression", label = "Combine replicates", value = T))
+                                  column(width = 2, radioButtons(inputId = "hide_unchanged_data_radio", choices = c("Hide unchanged data" = "hide_unchanged", "Show unchanged data" = "show_unchanged", "Grey out unchanged data" = "grey_unchanged"), label = "Choose points to view")),
+                                  column(width = 2, uiOutput(outputId = "replicate_plot_progression_input"))
                                          ),
+                               
+                                uiOutput(outputId = "alpha_val_input"),
                                 sliderInput(inputId = "progression_plot_height", label = "Plot height (px)", min = 200, max = 2000, value = 650, step = 50),
                                 uiOutput(outputId = "progression_plot_output"),
                                 sliderInput(inputId = "y.height", label = "Adjust y position of initial data", min = 0.001, max = 0.999, value = 0.5, step = 0.01),

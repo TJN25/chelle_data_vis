@@ -9,8 +9,18 @@ server <- function(input, output, session) {
     selectInput(inputId = 'replicate_plot', label = "Run", choices = inputVariables()$run, selected = inputVariables()$run[1], multiple = T)
   })
   
+  output$replicate_plot_progression_input <- renderUI({
+    selectInput(inputId = 'replicate_plot_progression', label = "Run", choices = inputVariables()$run, selected = inputVariables()$run, multiple = T)
+  })
+  
   output$blast_count_plot_input <- renderUI({
     selectInput(inputId = 'blast_count_plot', label = "Number of blasts", choices = inputVariables()$blast_count, selected = inputVariables()$blast_count[1], multiple = T)
+  })
+  
+  output$alpha_val_input <- renderUI({
+    if(input$hide_unchanged_data_radio != "hide_unchanged"){
+      sliderInput(inputId = "alpha_val_progression", label = "Opacity", min = 0, max = 1, value = 0.3, step = 0.1)
+    }
   })
   
   output$blast_duration_plot_input <- renderUI({
@@ -113,12 +123,15 @@ output$columns_and_rows_plot <- renderPlot({
 })
 
 output$progression_plot_all <- renderPlot({
+  print(input$hide_unchanged_data_radio)
   progPlotData <- progPlotData()
   progPlotData@y.height <- input$y.height
   progPlotData@y.variance <- input$y.variance
-  progPlotData@hideUnchanged <- input$hide_unchanged_data
-  print(input$hide_unchanged_data)
-  progPlotData@combine_replicates <- input$combine_replicates_progression
+  progPlotData@hideUnchanged <- input$hide_unchanged_data_radio
+  if(input$hide_unchanged_data_radio != "hide_unchanged"){
+  progPlotData@alphaVal <- input$alpha_val_progression
+  }
+  progPlotData@run <- as.numeric(input$replicate_plot_progression)
   progPlotData <- selectData(progPlotData)
   progPlotData@simBlast <- simulateBlasts(progPlotData)
   progPlotData <- generatePlot(progPlotData)
