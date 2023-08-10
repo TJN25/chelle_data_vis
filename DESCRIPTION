@@ -1,7 +1,7 @@
 Title: Beads data visualisations
 Author: T.J Nicholson, C.K Fitzgerald
 AuthorUrl: https://chellefitzgerald.shinyapps.io/beads/
-License: MIT
+License: GPL-3
 DisplayMode: Normal
 Tags: volcanology
 Type: Shiny
