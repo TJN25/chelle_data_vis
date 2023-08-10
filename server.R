@@ -17,6 +17,10 @@ server <- function(input, output, session) {
     selectInput(inputId = 'blast_count_plot', label = "Number of blasts", choices = inputVariables()$blast_count, selected = inputVariables()$blast_count[1], multiple = T)
   })
   
+  output$move_plot_input <- renderUI({
+    selectInput(inputId = 'move_plot', label = "Moving?", choices = inputVariables()$move_val, selected = inputVariables()$move_val[1], multiple = T)
+  })
+  
   output$alpha_val_input <- renderUI({
     if(input$hide_unchanged_data_radio != "hide_unchanged"){
       sliderInput(inputId = "alpha_val_progression", label = "Opacity", min = 0, max = 1, value = 0.3, step = 0.1)
@@ -57,7 +61,7 @@ server <- function(input, output, session) {
   observeEvent(input$save_data, {
     dataInputDF <- createNewDataFrame(input)
     myData <- dataInputClass(blastDuration = as.numeric(input$blast_length), blastCount = as.numeric(input$blast_count), 
-                             replicateNum = as.numeric(input$replicate), checkData = dataInputReactive$metaData, 
+                             replicateNum = as.numeric(input$replicate), moveVal = as.logical(input$move_value), checkData = dataInputReactive$metaData, 
                              inputDataFrame = dataInputDF, mainData = dataInputReactive$blastData)
     myData <- checkMetaDataValid(myData)
     myData <- saveData(myData)
@@ -98,14 +102,15 @@ server <- function(input, output, session) {
     ll$run <- sort(unique(plotData()$run))
     ll$blast_count <- sort(unique(plotData()$blast_count))
     ll$blast_duration <- sort(unique(plotData()$blast_duration))
+    ll$move_val <- sort(unique(plotData()$move_val))
     ll
   } 
   )
   
 output$all_bar_plots <- renderPlot({
   barPlotData <- barPlotData()
+  barPlotData@moving <- as.logical(input$move_plot)
   barPlotData@stack_colours <- input$stack_colours_plot
-  print(input$blast_length_plot)
   barPlotData@blast_duration <- as.numeric(input$blast_length_plot)
   barPlotData@blast_count <- as.numeric(input$blast_count_plot)
   barPlotData@run <- as.numeric(input$replicate_plot)
@@ -123,7 +128,6 @@ output$columns_and_rows_plot <- renderPlot({
 })
 
 output$progression_plot_all <- renderPlot({
-  print(input$hide_unchanged_data_radio)
   progPlotData <- progPlotData()
   progPlotData@y.height <- input$y.height
   progPlotData@y.variance <- input$y.variance

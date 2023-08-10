@@ -6,7 +6,7 @@ allDataClass <- setClass("allDataClass",
                          slots = list(blast_durations="numeric", blast_counts="numeric", 
                                       runs="numeric", blastData="data.frame", plotData = "data.frame"))
 
-selectedDataClass <- setClass("selectedDataClass", representation(selectedData = "data.frame", blast_duration="numeric", 
+selectedDataClass <- setClass("selectedDataClass", representation(selectedData = "data.frame", blast_duration="numeric", moving = "logical", 
                                                                   blast_count="numeric", run="numeric", 
                                                                   combine_replicates = "logical") ,
                               prototype (combine_replicates=F),
@@ -103,7 +103,8 @@ setMethod("weightToProportion", signature = c(plotData = "data.frame"),
 setGeneric("friendlyId", function(plotData) standardGeneric("friendlyId"))
 setMethod("friendlyId", signature = c(plotData = "data.frame"), 
           function(plotData){
-            plotData <- plotData %>% mutate(blast.id = paste("Replicate:", run, ", No. blasts: ", blast_count, ", Duration: ", blast_duration))
+            plotData <- plotData %>% mutate(blast.id = paste("Replicate:", run, ", No. blasts: ", 
+                                                             blast_count, ", Duration: ", blast_duration, ifelse(move_val, ", moved", ", static")))
             return(plotData)
           })
 
@@ -115,6 +116,7 @@ setMethod("initialize", "selectedDataClass", function(.Object, ...) {
   if(length(.Object@blast_duration) == 0) .Object@blast_duration <- .Object@blast_durations
   if(length(.Object@blast_count) == 0) .Object@blast_count <- .Object@blast_counts
   if(length(.Object@run) == 0) .Object@run <- .Object@runs
+  if(length(.Object@moving) == 0) .Object@moving <- c(T, F)
   .Object <- selectData(.Object)
   .Object
 })
@@ -126,20 +128,24 @@ setMethod("selectData", signature = c(x = "selectedDataClass"),
             blastLengths <- x@blast_duration
             runVals <- x@run
             combineReplicates <- x@combine_replicates
-            
+            moveVals <- x@moving
             dat <- x@plotData
             if(combineReplicates){
               dat <- dat[dat$blast_count %in% blastCounts,]
               dat <- dat[dat$blast_duration %in% blastLengths,]
-              dat <- dat %>% group_by(blast_duration, blast_count, row, column, Colour) %>% 
+              dat <- dat[dat$move_val %in% moveVals,]
+              dat <- dat %>% group_by(blast_duration, blast_count, row, move_val, column, Colour) %>% 
                 summarise(combined.weight = sum(Weight)) %>% 
                 dplyr::rename(Weight = combined.weight) %>% 
-                mutate(blast.id = paste("No. blasts: ", blast_count, ", Duration: ", blast_duration))
+                mutate(blast.id = paste("No. blasts: ", 
+                                        blast_count, ", Duration: ", 
+                                        blast_duration, ifelse(move_val, ", moving", ", static")))
               
             }else{
               dat <- dat[dat$run %in% runVals,]
               dat <- dat[dat$blast_count %in% blastCounts,]
               dat <- dat[dat$blast_duration %in% blastLengths,]
+              dat <- dat[dat$move_val %in% moveVals,]
             }
             
             x@selectedData <- dat
@@ -198,6 +204,7 @@ setMethod("generatePlot", signature = c("allBarPlotsClass"),
 
 setMethod("generatePlot", signature = c("progressionPlotClass"), 
           function(x){
+            cat("ploting\n")
             p <- plotBlastPoints(x@simBlast)
             ll <- list()
             ll$p <- p
@@ -213,12 +220,17 @@ setGeneric("plotData", function(x) standardGeneric("plotData"))
 setMethod("plotData", signature = c("allBarPlotsClass"), 
           function(x){
             plotData <- x@selectedData  %>% mutate(use_colour = ifelse(Colour == "yellow", "#FFDB33", ifelse(Colour == "red", "#FF3333", "#339BFF")))
-            
             if(x@stack_colours){
               stackColours = "stack"
             }else{
               stackColours = "dodge"
             }
+            if(x@combine_replicates){
+              plotData <- plotData %>% arrange(move_val, blast_duration, blast_count)
+            }else{
+              plotData <- plotData %>% arrange(move_val, blast_duration, blast_count, run)
+            }
+            plotData$blast.id <- factor(plotData$blast.id, levels = unique(plotData$blast.id))
             p <- ggplot(data = plotData) + 
               geom_bar(aes(x = blast.id, y = Weight, group = Colour),fill =  plotData$use_colour, position = stackColours, stat = "identity") +
               facet_grid(row ~ column, labeller = labeller(row = rowLabel,
@@ -234,27 +246,31 @@ setMethod("includeMissingPostions", signature = c("progressionPlotClass"),
             extraData <- data.frame(run = -1, blast_duration = -1, 
                                     blast_count = -1, yellow = 0, blue = 0, 
                                     red = 0, row = -1, column = -1, 
-                                    id = "000")
+                                    id = "000", move_val = F)
             rowsVector <- c(1, 2, 3)
             colsVector <- c(1, 1, 1, 2, 2, 2, 3, 3, 3)
             for(runVal in x@runs){
               for(blastDuration in x@blast_durations){
                 blast_counts <- c(0, x@blast_counts)
                 for(blastCount in blast_counts){
-                  idVal <- paste0(blastDuration, blastCount, runVal)
+                  for(m in 1:length(unique(x@plotData$move_val))){
+                    moveText <- ifelse(m == 1, "", "moving")
+                    moveLogical <- ifelse(m == 1, F, T)
+                  idVal <- paste0(blastDuration, blastCount, runVal, moveText)
                   if(idVal %in% x@plotData$id){
                     next
                   }
                   df <- data.frame(run = runVal, blast_duration = blastDuration, 
                                    blast_count = blastCount, yellow = 0, blue = 0, 
                                    red = 0, row = rowsVector, column = colsVector, 
-                                   id = idVal)
+                                   id = idVal, move_val = moveLogical)
                   if(blastCount == 0){
                     df$yellow[df$row == 1] <- 60
                     df$blue[df$row == 2] <- 60
                     df$red[df$row == 3] <- 60
                   }
                   extraData <- extraData %>% rbind(df)
+                }
                 }
               }
               
@@ -272,7 +288,7 @@ setMethod("simulateBlasts", signature = c(x = "progressionPlotClass"),
             y.variance <- x@y.variance
             hideUnchanged <- x@hideUnchanged
             alpha.val <- x@alphaVal
-            allBlasts <- data.frame(x = 0, y = 0 , colour = "white", use_colour = "#FFFFFF", blast_count = -1, blast_duration = -1)
+            allBlasts <- data.frame(x = 0, y = 0 , colour = "white", use_colour = "#FFFFFF", blast_count = -1, blast_duration = -1, move_val = F)
             
             blastDurations <- sort(unique(plotData$blast_duration))
             
@@ -281,18 +297,21 @@ setMethod("simulateBlasts", signature = c(x = "progressionPlotClass"),
               blastCountValues <- sort(unique(selectedData$blast_count))
               for(b in blastCountValues){
                 
-                dat <- data.frame(x = 0, y = 0 , colour = "white", use_colour = "#FFFFFF", blast_count = -1, blast_duration = -1)
+                dat <- data.frame(x = 0, y = 0 , colour = "white", use_colour = "#FFFFFF", blast_count = -1, blast_duration = -1, move_val = F)
                 for(i in 1:3){
                   for(j in 1:3){
+                    for(m in 1:length(unique(selectedData$move_val))){
                     if(b == 0){
-                      tmp <- generatePoints(selectedData, rowVal = i, colVal = j, blastVal = b, y.height, y.variance)
+                      tmp <- generatePoints(selectedData, rowVal = i, colVal = j, blastVal = b, y.height, y.variance, move_num = m)
                       tmp$blast_duration <- duration
                       dat <- dat %>% rbind(tmp)
                     }else{
-                      tmp <- generatePoints(selectedData, rowVal = i, colVal = j, blastVal = b)
+                      tmp <- generatePoints(selectedData, rowVal = i, colVal = j, blastVal = b, move_num = m)
                       tmp$blast_duration <- duration
                       dat <- dat %>% rbind(tmp)
                     }
+                    }  
+                    
                     
                   }
                 }
@@ -323,11 +342,16 @@ setMethod("simulateBlasts", signature = c(x = "progressionPlotClass"),
             
           })
 
-setGeneric("generatePoints", function(plotData, rowVal, colVal, blastVal, y.height, y.variance) standardGeneric("generatePoints"))
+setGeneric("generatePoints", function(plotData, rowVal, colVal, blastVal, y.height, y.variance, move_num) standardGeneric("generatePoints"))
 setMethod("generatePoints", signature = c(plotData = "data.frame"), 
-          function(plotData, rowVal, colVal, blastVal, y.height, y.variance){
+          function(plotData, rowVal, colVal, blastVal, y.height, y.variance, move_num){
             set.seed(101)
-            selectedData <- plotData %>% filter(blast_count == blastVal, row == rowVal, column == colVal)
+            if(move_num == 1){
+              moveVal = F
+            }else{
+              moveVal = T
+            }
+            selectedData <- plotData %>% filter(blast_count == blastVal, row == rowVal, column == colVal, move_val == moveVal)
             selectedData <- selectedData %>% group_by(row, column, Colour) %>% summarise(weight.all = sum(Weight))
             if(blastVal == 0){
               minRow <- 3 - rowVal + y.height - y.variance
@@ -364,6 +388,7 @@ setMethod("generatePoints", signature = c(plotData = "data.frame"),
             }
             dat <- dat %>% mutate(use_colour = ifelse(colour == "yellow", "#E79F00", ifelse(colour == "red", "#FF3333", ifelse(colour == "blue", "#339BFF", "#FFFFFF"))))
             dat$blast_count <- blastVal
+            dat$move_val <- moveVal
             return(dat)
           })
 
@@ -372,10 +397,16 @@ setGeneric("plotBlastPoints", function(allBlasts) standardGeneric("plotBlastPoin
 setMethod("plotBlastPoints", signature = c(allBlasts = "data.frame"), 
           function(allBlasts){
             allBlasts <- allBlasts %>% filter(blast_count > -1)
+            blast0.11 <- allBlasts %>% filter(blast_count == 1, blast_duration == 0.1, move_val == F) %>% mutate(x_cat = 1, y_cat = "Duration of blasts (1 blast)")
+            allBlasts <- allBlasts %>% mutate(x_cat = ifelse(blast_duration == 0.1, blast_count, ifelse(blast_count == 0, 0, blast_duration + 1)), 
+                                              y_cat = ifelse(blast_duration == 0.1, ifelse(move_val, "Number of blasts (duration = 0.1s) moving", "Number of blasts (duration = 0.1s) static"), "Duration of blasts (1 blast)"))
+            allBlasts$y_cat <- factor(allBlasts$y_cat, levels = c("Number of blasts (duration = 0.1s) static", 
+                                                                  "Number of blasts (duration = 0.1s) moving",
+                                                                  "Duration of blasts (1 blast)"))
+            allBlasts <- allBlasts %>% rbind(blast0.11)
             p <- ggplot(data = allBlasts) + 
               geom_point(aes(x = x, y = y, group = colour), color = allBlasts$use_colour, alpha = allBlasts$alphaVal) +
-              facet_grid(blast_duration ~ blast_count, labeller = labeller(blast_duration = durationLabel,
-                                                                           blast_count = countLabel)) +
+              facet_grid(y_cat ~ x_cat, labeller = labeller(x_cat = countLabel)) +
               theme_bw()
             return(p)
             

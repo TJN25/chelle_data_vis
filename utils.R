@@ -21,7 +21,12 @@ createNewDataFrame <- function(input) {
                      3, 3, 3),
              column = c(1, 2, 3, 1, 2, 3, 1, 2, 3)
   )
-  df <- df %>% mutate(id = paste0(blast_duration, blast_count, run))
+  if(input$move_value){
+    df <- df %>% mutate(id = paste0(blast_duration, blast_count, run, "moving"))
+  }else{
+    df <- df %>% mutate(id = paste0(blast_duration, blast_count, run))
+  }
+  df$move_val <- input$move_value
   return(df)
 }
 
