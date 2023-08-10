@@ -1,7 +1,7 @@
 #
 dataInputClass <- setClass("dataInputClass", 
          slots = list(blastDuration="numeric", blastCount="numeric", 
-                      replicateNum="numeric", checkData="data.frame", 
+                      replicateNum="numeric", moveVal="logical", checkData="data.frame", 
                       inputDataFrame="data.frame", valid_input="logical",
                       mainData="data.frame",id ="character"))
          
@@ -22,7 +22,11 @@ setMethod(f = "checkMetaDataValid",
           signature = "dataInputClass", 
           function(x) {
             x@valid_input <- T
-            x@id = paste0(x@blastDuration, x@blastCount, x@replicateNum)
+            if(x@moveVal){
+              x@id = paste0(x@blastDuration, x@blastCount, x@replicateNum, "moving")
+            }else{
+              x@id = paste0(x@blastDuration, x@blastCount, x@replicateNum)
+            }
             if(x@id %in% x@checkData$id) {
               x@valid_input <- F
             } 
