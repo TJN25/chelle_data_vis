@@ -129,7 +129,8 @@ output$columns_and_rows_plot <- renderPlot({
 
 output$progression_plot_all <- renderPlot({
   progPlotData <- progPlotData()
-  progPlotData@y.height <- input$y.height
+  progPlotData@bead_weight <- as.numeric(input$bead_weight)
+  progPlotData@colours_prog <- input$colours_prog
   progPlotData@y.variance <- input$y.variance
   progPlotData@hideUnchanged <- input$hide_unchanged_data_radio
   if(input$hide_unchanged_data_radio != "hide_unchanged"){

@@ -18,8 +18,10 @@ allBarPlotsClass <- setClass("allBarPlotsClass", representation(p = "list", stac
 
 progressionPlotClass <- setClass("progressionPlotClass", representation(p = "list", y.height = "numeric", 
                                                                         y.variance = "numeric", hideUnchanged = "character", 
-                                                                        simBlast = "data.frame", extraData = "data.frame", alphaVal = "numeric"),
-                                 prototype(hideUnchanged = "hide_unchanged", y.variance = 0.5, y.height = 0.5, alphaVal = 0.3), 
+                                                                        simBlast = "data.frame", extraData = "data.frame", alphaVal = "numeric", 
+                                                                        bead_weight = "numeric",
+                                                                        colours_prog = "character"),
+                                 prototype(hideUnchanged = "hide_unchanged", y.variance = 0.5, y.height = 0.5, alphaVal = 0.3, bead_weight = 0.2, colours_prog = c("yellow", "blue", "red")), 
                                  contains = "selectedDataClass")
 
 # allDataClass functions -----------------------------------------------------------
@@ -282,42 +284,35 @@ setMethod("includeMissingPostions", signature = c("progressionPlotClass"),
 
 setGeneric("simulateBlasts", function(x) standardGeneric("simulateBlasts"))
 setMethod("simulateBlasts", signature = c(x = "progressionPlotClass"), 
-          function(x){
-            plotData <- x@selectedData %>% rbind(x@extraData)
-            y.height <- x@y.height
-            y.variance <- x@y.variance
-            hideUnchanged <- x@hideUnchanged
-            alpha.val <- x@alphaVal
-            allBlasts <- data.frame(x = 0, y = 0 , colour = "white", use_colour = "#FFFFFF", blast_count = -1, blast_duration = -1, move_val = F)
+          function(object){
+            set.seed(101)
+            hideUnchanged <- object@hideUnchanged
+            alpha.val <- object@alphaVal
+            y.height <- object@y.height
+            y.variance <- object@y.variance
+            bead_weight <- object@bead_weight
+            colours_prog <- object@colours_prog
             
-            blastDurations <- sort(unique(plotData$blast_duration))
+            selectedData <- object@selectedData %>% mutate(value = ceiling(Weight * 1/bead_weight)) %>% 
+              uncount(value) %>% select(run, blast_duration, blast_count, row, column, move_val, Colour) 
+            selectedData <- selectedData %>% 
+              mutate(x = runif(nrow(selectedData ), 0.001, 0.999),
+                     y = runif(nrow(selectedData ), 0.001, 0.999))
             
-            for(duration in blastDurations){
-              selectedData <- plotData %>% filter(blast_duration == duration)
-              blastCountValues <- sort(unique(selectedData$blast_count))
-              for(b in blastCountValues){
-                
-                dat <- data.frame(x = 0, y = 0 , colour = "white", use_colour = "#FFFFFF", blast_count = -1, blast_duration = -1, move_val = F)
-                for(i in 1:3){
-                  for(j in 1:3){
-                    for(m in 1:length(unique(selectedData$move_val))){
-                    if(b == 0){
-                      tmp <- generatePoints(selectedData, rowVal = i, colVal = j, blastVal = b, y.height, y.variance, move_num = m)
-                      tmp$blast_duration <- duration
-                      dat <- dat %>% rbind(tmp)
-                    }else{
-                      tmp <- generatePoints(selectedData, rowVal = i, colVal = j, blastVal = b, move_num = m)
-                      tmp$blast_duration <- duration
-                      dat <- dat %>% rbind(tmp)
-                    }
-                    }  
-                    
-                    
-                  }
-                }
-                allBlasts <- allBlasts %>%  rbind(dat)
-              }
-            }
+            extraBlasts <- object@extraData %>% mutate(value = ceiling(Weight* 1/bead_weight)) %>% 
+              uncount(value) %>% select(run, blast_duration, blast_count, row, column, move_val, Colour) 
+            extraBlasts <- extraBlasts %>% 
+              mutate(x = runif(nrow(extraBlasts), 0.001, 0.999),
+                     y = runif(nrow(extraBlasts), y.height - y.variance, y.height + y.variance))
+            
+            
+            
+            allBlasts <- selectedData %>% rbind(extraBlasts) %>% mutate(y = y + 3 - row,
+                                              x = x + column - 1) %>% 
+              mutate(use_colour = ifelse(Colour == "yellow", "#E79F00", ifelse(Colour == "red", "#FF3333", ifelse(Colour == "blue", "#339BFF", "#FFFFFF")))) %>% 
+              dplyr::rename(colour = Colour) %>% 
+              select(x, y, colour, use_colour, blast_count, blast_duration, move_val)
+            
             allBlasts <- allBlasts %>% mutate(alphaVal = 1)
             if(hideUnchanged == "hide_unchanged"){
               allBlasts <- allBlasts %>%  mutate(keep = ifelse(blast_count == 0, T, 
@@ -338,64 +333,18 @@ setMethod("simulateBlasts", signature = c(x = "progressionPlotClass"),
                                                                              ifelse(colour == "red", ifelse(y < 1, F, T), T)))))
               allBlasts <- allBlasts %>% mutate(alphaVal = ifelse(keep, 1, alpha.val)) %>% select(-keep)
             }
+            allBlasts <- allBlasts %>% mutate(bead_weight = bead_weight + 0.5)
+            
+            allBlasts <- allBlasts %>% filter(colour %in% colours_prog)
+            
             return(allBlasts)
             
           })
 
-setGeneric("generatePoints", function(plotData, rowVal, colVal, blastVal, y.height, y.variance, move_num) standardGeneric("generatePoints"))
-setMethod("generatePoints", signature = c(plotData = "data.frame"), 
-          function(plotData, rowVal, colVal, blastVal, y.height, y.variance, move_num){
-            set.seed(101)
-            if(move_num == 1){
-              moveVal = F
-            }else{
-              moveVal = T
-            }
-            selectedData <- plotData %>% filter(blast_count == blastVal, row == rowVal, column == colVal, move_val == moveVal)
-            selectedData <- selectedData %>% group_by(row, column, Colour) %>% summarise(weight.all = sum(Weight))
-            if(blastVal == 0){
-              minRow <- 3 - rowVal + y.height - y.variance
-              maxRow <- 3 - rowVal + y.height + y.variance
-            }else{
-              minRow <- 3.001 - rowVal
-              maxRow <- 4 - rowVal
-              
-            }
-            minCol <- colVal - 0.999
-            maxCol <- colVal
-            yellowCount <- ceiling(selectedData$weight.all[selectedData$Colour == "yellow"]) * 1
-            blueCount <- ceiling(selectedData$weight.all[selectedData$Colour == "blue"]) * 1
-            redCount <- ceiling(selectedData$weight.all[selectedData$Colour == "red"]) *  1
-            dat <- data.frame(x = 0, y = 0 , colour = "white")
-            if(yellowCount > 0){
-              yellowData <- data.frame(x = runif(yellowCount, minCol, maxCol), 
-                                       y = runif(yellowCount, minRow, maxRow),
-                                       colour = "yellow")
-              dat <- dat %>% rbind(yellowData)
-            }
-            if(redCount > 0){
-              redData <- data.frame(x = runif(redCount, minCol, maxCol), 
-                                    y = runif(redCount, minRow, maxRow),
-                                    colour = "red")
-              dat <- dat %>% rbind(redData)
-              
-            }
-            if(blueCount > 0){
-              blueData <- data.frame(x = runif(blueCount, minCol, maxCol), 
-                                     y = runif(blueCount, minRow, maxRow),
-                                     colour = "blue")
-              dat <- dat %>% rbind(blueData)
-            }
-            dat <- dat %>% mutate(use_colour = ifelse(colour == "yellow", "#E79F00", ifelse(colour == "red", "#FF3333", ifelse(colour == "blue", "#339BFF", "#FFFFFF"))))
-            dat$blast_count <- blastVal
-            dat$move_val <- moveVal
-            return(dat)
-          })
-
-
 setGeneric("plotBlastPoints", function(allBlasts) standardGeneric("plotBlastPoints"))
 setMethod("plotBlastPoints", signature = c(allBlasts = "data.frame"), 
           function(allBlasts){
+            bead_weight <- allBlasts$bead_weight[1]
             allBlasts <- allBlasts %>% filter(blast_count > -1)
             blast0.11 <- allBlasts %>% filter(blast_count == 1, blast_duration == 0.1, move_val == F) %>% mutate(x_cat = 1, y_cat = "Duration of blasts (1 blast)")
             allBlasts <- allBlasts %>% mutate(x_cat = ifelse(blast_duration == 0.1, blast_count, ifelse(blast_count == 0, 0, blast_duration + 1)), 
@@ -404,8 +353,9 @@ setMethod("plotBlastPoints", signature = c(allBlasts = "data.frame"),
                                                                   "Number of blasts (duration = 0.1s) moving",
                                                                   "Duration of blasts (1 blast)"))
             allBlasts <- allBlasts %>% rbind(blast0.11)
+            allBlasts <- allBlasts %>% mutate(keep.2 = ifelse(blast_duration == 2 & blast_count == 0, F, ifelse(blast_duration == 1 & move_val, F, T))) %>% filter(keep.2) %>% select(-keep.2)
             p <- ggplot(data = allBlasts) + 
-              geom_point(aes(x = x, y = y, group = colour), color = allBlasts$use_colour, alpha = allBlasts$alphaVal) +
+              geom_point(aes(x = x, y = y, group = colour), size = bead_weight, color = allBlasts$use_colour, alpha = allBlasts$alphaVal) +
               facet_grid(y_cat ~ x_cat, labeller = labeller(x_cat = countLabel)) +
               theme_bw()
             return(p)

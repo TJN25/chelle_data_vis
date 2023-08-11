@@ -146,12 +146,13 @@ ui <- dashboardPage(
                         tabItem(tabName = "plot_3",
                                 helpText('Loading is slow. For each gram of beads a point is randomly generated in the segment in which the bead was found. Starting data can be adjusted.'),
                                 fluidRow(
-                                  column(width = 2, radioButtons(inputId = "hide_unchanged_data_radio", choices = c("Hide unchanged data" = "hide_unchanged", "Show unchanged data" = "show_unchanged", "Grey out unchanged data" = "grey_unchanged"), label = "Choose points to view")),
-                                  column(width = 2, uiOutput(outputId = "replicate_plot_progression_input"))
-                                         ),
+                                  column(width = 3, radioButtons(inputId = "hide_unchanged_data_radio", choices = c("Hide unchanged data" = "hide_unchanged", "Show unchanged data" = "show_unchanged", "Grey out unchanged data" = "grey_unchanged"), 
+                                                                 label = "Choose points to view"), uiOutput(outputId = "alpha_val_input")),
+                                  column(width = 2, uiOutput(outputId = "replicate_plot_progression_input"), selectInput(inputId = 'colours_prog', label = "Select colours:", choices = c("yellow", "blue", "red"), selected = c("yellow", "blue", "red"), multiple = T)),
+                                  column(width = 3, sliderInput(inputId = "progression_plot_height", label = "Plot height (px)", min = 200, max = 2000, value = 650, step = 50)),
+                                  column(width = 3, sliderInput(inputId = "bead_weight", label = "Bead weight (grams)", min = 0.01, max = 1, value = 0.2, step = 0.01))
+                                ),
                                
-                                uiOutput(outputId = "alpha_val_input"),
-                                sliderInput(inputId = "progression_plot_height", label = "Plot height (px)", min = 200, max = 2000, value = 650, step = 50),
                                 uiOutput(outputId = "progression_plot_output"),
                                 sliderInput(inputId = "y.height", label = "Adjust y position of initial data", min = 0.001, max = 0.999, value = 0.5, step = 0.01),
                                 sliderInput(inputId = "y.variance", label = "Adjust y variance of initial data", min = 0.001, max = 0.999, value = 0.45, step = 0.01)
