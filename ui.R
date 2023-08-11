@@ -144,7 +144,12 @@ ui <- dashboardPage(
                         ),
                         
                         tabItem(tabName = "plot_3",
-                                helpText('Loading is slow. For each gram of beads a point is randomly generated in the segment in which the bead was found. Starting data can be adjusted.'),
+                                markdown('For each gram of beads points are randomly generated in the segment in which the bead was found. Starting data can be adjusted.
+                                
+                                          The number of points is calculated using `ceiling(weight/bead_weight)` where:
+                                          * `ceiling()` rounds up to the nearest whole number
+                                          * `weight` is the weight in grams from the spreadsheet
+                                          * `bead_weight` is the selected value for the weight of the beads using the slider'),
                                 fluidRow(
                                   column(width = 3, radioButtons(inputId = "hide_unchanged_data_radio", choices = c("Hide unchanged data" = "hide_unchanged", "Show unchanged data" = "show_unchanged", "Grey out unchanged data" = "grey_unchanged"), 
                                                                  label = "Choose points to view"), uiOutput(outputId = "alpha_val_input")),
