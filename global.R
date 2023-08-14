@@ -12,6 +12,8 @@ library(tidyverse)
 library(ggplot2)
 library(ggpubr)
 library(gganimate)
+library("data.table")
+library(reshape2)
 library(rdrop2)
 # modules
 source("background-colours.R")

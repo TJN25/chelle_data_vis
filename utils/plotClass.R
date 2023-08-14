@@ -19,10 +19,12 @@ allBarPlotsClass <- setClass("allBarPlotsClass", representation(p = "list", stac
 progressionPlotClass <- setClass("progressionPlotClass", representation(p = "list", y.height = "numeric", 
                                                                         y.variance = "numeric", hideUnchanged = "character", 
                                                                         simBlast = "data.frame", extraData = "data.frame", alphaVal = "numeric", 
-                                                                        bead_weight = "numeric",
-                                                                        colours_prog = "character"),
-                                 prototype(hideUnchanged = "hide_unchanged", y.variance = 0.5, y.height = 0.5, alphaVal = 0.3, bead_weight = 0.2, colours_prog = c("yellow", "blue", "red")), 
+                                                                        bead_weight = "numeric", list.group = "list",
+                                                                        colours_prog = "character", progSummary = "data.frame", row_val = "numeric", col_val = "numeric"),
+                                 prototype(hideUnchanged = "hide_unchanged", y.variance = 0.5, y.height = 0.5, alphaVal = 0.3, bead_weight = 0.03, colours_prog = c("yellow", "blue", "red"), col_val = c(1,2,3), row_val = c(1,2,3)), 
                                  contains = "selectedDataClass")
+
+
 
 # allDataClass functions -----------------------------------------------------------
 
@@ -311,7 +313,7 @@ setMethod("simulateBlasts", signature = c(x = "progressionPlotClass"),
                                               x = x + column - 1) %>% 
               mutate(use_colour = ifelse(Colour == "yellow", "#E79F00", ifelse(Colour == "red", "#FF3333", ifelse(Colour == "blue", "#339BFF", "#FFFFFF")))) %>% 
               dplyr::rename(colour = Colour) %>% 
-              select(x, y, colour, use_colour, blast_count, blast_duration, move_val)
+              select(x, y, colour, use_colour, blast_count, blast_duration, move_val, run)
             
             allBlasts <- allBlasts %>% mutate(alphaVal = 1)
             if(hideUnchanged == "hide_unchanged"){
@@ -353,14 +355,41 @@ setMethod("plotBlastPoints", signature = c(allBlasts = "data.frame"),
                                                                   "Number of blasts (duration = 0.1s) moving",
                                                                   "Duration of blasts (1 blast)"))
             allBlasts <- allBlasts %>% rbind(blast0.11)
-            allBlasts <- allBlasts %>% mutate(keep.2 = ifelse(blast_duration == 2 & blast_count == 0, F, ifelse(blast_duration == 1 & move_val, F, T))) %>% filter(keep.2) %>% select(-keep.2)
+            allBlasts <- allBlasts %>% mutate(keep.2 = ifelse(blast_duration == 2 & blast_count == 0, F, ifelse(blast_duration == 1 & move_val, F, ifelse(blast_duration == 4, F, T)))) %>% filter(keep.2) %>% select(-keep.2)
             p <- ggplot(data = allBlasts) + 
-              geom_point(aes(x = x, y = y, group = colour), size = bead_weight, color = allBlasts$use_colour, alpha = allBlasts$alphaVal) +
+              geom_point(aes(x = x, y = y, group = colour), size = bead_weight/10, color = allBlasts$use_colour, alpha = allBlasts$alphaVal) +
               facet_grid(y_cat ~ x_cat, labeller = labeller(x_cat = countLabel)) +
               theme_bw()
             return(p)
             
           })
 
+setGeneric("summariseData", function(x) standardGeneric("summariseData"))
+setMethod("summariseData", signature = c(x = "progressionPlotClass"), 
+          function(x){
+             blast_count_table <- x@blast_count
+             blast_duration_table <- x@blast_duration
+             run_table <- x@run
+             colours_prog_table <- x@colours_prog
+             move_val_table <- x@moving
+             col_val_table <- x@col_val
+             row_val_table <- x@row_val
+             list.group <- x@list.group
+            x@progSummary <- x@simBlast %>% mutate(X = ceiling(x), Y = ceiling(y)) %>% filter(blast_count %in% blast_count_table,
+                                                                                          blast_duration %in% blast_duration_table,
+                                                                                          run %in% run_table,
+                                                                                          colour %in% colours_prog_table,
+                                                                                          move_val %in% move_val_table,
+                                                                                          X %in% col_val_table,
+                                                                                          Y %in% row_val_table) %>% 
+              group_by_at(unlist(list.group)) %>% 
+              summarise(num.of.beads.shown = n())
+            return(x)
+          })
 
+setGeneric("fitTrendToSummary", function(x) standardGeneric("fitTrendToSummary"))
+setMethod("fitTrendToSummary", signature = c(x = "progressionPlotClass"), 
+          function(x){
+            
+          })
 

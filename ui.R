@@ -32,6 +32,8 @@ ui <- dashboardPage(
                                                           menuSubItem(text = "Segments by colour", "plot_1"),
                                                           menuSubItem(text = "Columns and rows analysis", tabName = "plot_2"),
                                                           menuSubItem(text = "Progression", tabName = "plot_3")),
+                                                 menuItem("Progression data", tabName = "progression_table_tab", icon = icon("table")
+                                                 ),
                                                  menuItem("Data input", tabName = "data_input_tab", icon = icon("pen")
                                                  ),
                                                  
@@ -103,7 +105,7 @@ ui <- dashboardPage(
                                   ))
                                 ),
                                
-                                selectInput(inputId = 'replicate', label = "Run", choices = c("-", "1", "2"), selected = "-", multiple = FALSE),
+                                selectInput(inputId = 'replicate', label = "Run", choices = c("-", "1", "2", "3"), selected = "-", multiple = FALSE),
                                 selectInput(inputId = 'blast_count', label = "Number of blasts", choices = c("-", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), selected = "-", multiple = FALSE),
                                 selectInput(inputId = 'blast_length', label = "Blast length (seconds)", choices = c("-", "0.1", "1", "2", "3", "4"), selected = "-", multiple = FALSE),
                                 checkboxInput(inputId = "move_value", label = "Blast location is moving", value = F),
@@ -155,13 +157,39 @@ ui <- dashboardPage(
                                                                  label = "Choose points to view"), uiOutput(outputId = "alpha_val_input")),
                                   column(width = 2, uiOutput(outputId = "replicate_plot_progression_input"), selectInput(inputId = 'colours_prog', label = "Select colours:", choices = c("yellow", "blue", "red"), selected = c("yellow", "blue", "red"), multiple = T)),
                                   column(width = 3, sliderInput(inputId = "progression_plot_height", label = "Plot height (px)", min = 200, max = 2000, value = 650, step = 50)),
-                                  column(width = 3, sliderInput(inputId = "bead_weight", label = "Bead weight (grams)", min = 0.01, max = 1, value = 0.2, step = 0.01))
+                                  column(width = 3, sliderInput(inputId = "bead_weight", label = "Bead weight (grams)", min = 0.01, max = 1, value = 0.03, step = 0.01))
                                 ),
                                
                                 uiOutput(outputId = "progression_plot_output"),
                                 sliderInput(inputId = "y.height", label = "Adjust y position of initial data", min = 0.001, max = 0.999, value = 0.5, step = 0.01),
                                 sliderInput(inputId = "y.variance", label = "Adjust y variance of initial data", min = 0.001, max = 0.999, value = 0.45, step = 0.01)
+                                
                         ),
+                        tabItem(tabName = "progression_table_tab",
+                                fluidRow(
+                                column(width = 2, radioButtons(inputId = "hide_unchanged_data_radio_table", choices = c("Hide unchanged data" = "hide_unchanged", "Show unchanged data" = "show_unchanged"), label = "Choose points to view")),
+                                column(width = 2, sliderInput(inputId = "bead_weight_table", label = "Bead weight (grams)", min = 0.01, max = 1, value = 0.03, step = 0.01)),
+                                column(width = 2, selectInput(inputId = 'colours_prog_table', label = "Select colours:", choices = c("yellow", "blue", "red"), selected = c("yellow", "blue", "red"), multiple = T)),
+                                column(width = 3, uiOutput(outputId = "group_by_table_input"))
+                        ),
+                        fluidRow(
+                          column(width = 2, uiOutput(outputId = "blast_count_table_input"),
+                                 uiOutput(outputId = "blast_duration_table_input")),
+                          column(width = 2, uiOutput(outputId = "move_val_table_input"),
+                                 uiOutput(outputId = "run_table_input")
+                                 ),
+                          column(width = 2, uiOutput(outputId = "row_val_table_input"),
+                                 uiOutput(outputId = "col_val_table_input"))
+                        ),
+                                DTOutput("progTable"),
+                        fluidRow(
+                          column(width = 3, uiOutput(outputId = "prog_table_x_input")),
+                          column(width = 3, uiOutput(outputId = "prog_table_y_input")),
+                          column(width = 3, uiOutput(outputId = "colour_by_prog_input"))
+                        ),
+                        uiOutput("show_trend_options"),
+                        textOutput("progTrend"),
+                        plotOutput("progSummaryPlot")),
                         tabItem(tabName = "data_view_tab",
                                 DTOutput("blastDataTable"),
                                 downloadButton("downloadData", "Download")
