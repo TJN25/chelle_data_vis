@@ -1,5 +1,5 @@
 # packages
-library(googledrive)
+# library(googledrive)
 library("shiny")
 library(shinythemes)
 library(shinydashboard)
@@ -11,10 +11,11 @@ library(shinyalert)
 library(tidyverse)
 library(ggplot2)
 library(ggpubr)
-library(gganimate)
+# library(gganimate)
 library("data.table")
 library(reshape2)
-library(rdrop2)
+
+# library(rdrop2)
 # modules
 source("background-colours.R")
 

@@ -96,16 +96,21 @@ server <- function(input, output, session) {
     progSummary <- progSummary()@progSummary
     selectInput(inputId = 'colour_by_prog', label = "Colour by: ", choices = c("-", colnames(progSummary)), selected = "-", multiple = F)
   })
+
+  output$shape_by_prog_input <- renderUI({
+    progSummary <- progSummary()@progSummary
+    selectInput(inputId = 'shape_by_prog', label = "Shape by: ", choices = c("-", colnames(progSummary)), selected = "-", multiple = F)
+  })
   
+    
   output$show_trend_options <- renderUI({
-    if(input$colour_by_prog == "-"){
     fluidRow(
       column(width = 2, checkboxInput(inputId = "show_trend_line", label = "Show trend line", 
                                       value = T)),
       column(width = 2, checkboxInput(inputId = "show_confidence_interval", label = "Show confidence interval", 
-                                      value = F))
+                                      value = F)),
+      column(width = 2, sliderInput(inputId = "point_size_prog", label = "Point size", min = 0.1, max = 5, value = 2, step = 0.1))
     )
-    }
   })
   
 # Data input --------------------------------------------------------------
@@ -264,10 +269,9 @@ output$progSummaryPlot <- renderPlot({
   y_val <- input$prog_table_y
   y_val <- as.symbol(y_val)
   progSummary <- progSummary %>% mutate(num.of.beads.shown = ifelse(blast_count == 0, 0, num.of.beads.shown))
-  if(input$colour_by_prog == "-"){
-    
+  if(input$colour_by_prog == "-" & input$shape_by_prog == "-"){
     p <- ggplot(data = progSummary, aes(x = !!x_val, y = !!y_val)) +
-      geom_point() 
+      geom_point(size = input$point_size_prog) 
     if(input$show_trend_line){
     p <- p + stat_smooth(method = "lm", col = "red", se=input$show_confidence_interval)
     }
@@ -275,58 +279,115 @@ output$progSummaryPlot <- renderPlot({
     
   }else{
     dat <- progSummary
-    colour_by <- as.symbol(input$colour_by_prog)
-    
-    categories <- unique(unlist(progSummary[input$colour_by_prog]))
-    fullSet <- unlist(progSummary[input$colour_by_prog])
-
-    counter <- 0
-    print(categories)
-    for(cat in categories){
-      counter <- counter + 1
-      dat$colour_val[fullSet == cat] <- as.character(counter)
+    if(input$colour_by_prog != "-"){
+      colour_by <- as.symbol(input$colour_by_prog)
+      categories <- unique(unlist(progSummary[input$colour_by_prog]))
+      fullSet <- unlist(progSummary[input$colour_by_prog])
+      
+      counter <- 0
+      print(categories)
+      for(cat in categories){
+        counter <- counter + 1
+        dat$colour_val[fullSet == cat] <- as.character(counter)
+      }
+    }else{
+      dat$colour_val <- as.character(1)
     }
+    if(input$shape_by_prog != "-"){
+      shape_by <- as.symbol(input$shape_by_prog)
+      categories <- unique(unlist(progSummary[input$shape_by_prog]))
+      fullSet <- unlist(progSummary[input$shape_by_prog])
+      
+      counter <- 0
+      print(categories)
+      for(cat in categories){
+        counter <- counter + 1
+        dat$shape_val[fullSet == cat] <- as.character(counter)
+      }
+    }else{
+      dat$shape_val <- as.character(1)
+    }  
+    dat <- dat %>% mutate(plot.id = paste0(colour_val, shape_val))
+    
     if(input$colour_by_prog == "colour"){
       dat <- dat %>% mutate(colour_val = ifelse(colour == "yellow", "#E79F00", ifelse(colour == "red", "#FF3333", ifelse(colour == "blue", "#339BFF", "#FFFFFF"))))
-      ggplot(data = dat) +
-        geom_point(aes(x = !!x_val, y = !!y_val, group = !!colour_by), color = dat$colour_val) + 
-        theme_classic()
+      p <- ggplot(data = dat, aes(x = !!x_val, y = !!y_val, group = plot.id, shape = shape_val)) +
+        geom_point( color = dat$colour_val, size = input$point_size_prog)
+      
+      if(input$show_trend_line){
+      p <- p + stat_smooth(method = "lm", col = "red", se=input$show_confidence_interval)
+      }
+      p <- p + theme_classic()
+      p
     }else{
-    ggplot(data = dat) +
-      geom_point(aes(x = !!x_val, y = !!y_val, group = !!colour_by, color = dat$colour_val)) + 
-      theme_classic()
+    p <- ggplot(data = dat, aes(x = !!x_val, y = !!y_val, group = plot.id, color = colour_val, shape = shape_val)) +
+          geom_point(size = input$point_size_prog) 
+      
+    if(input$show_trend_line){
+      p <- p + stat_smooth(method = "lm", col = "red", se=input$show_confidence_interval)
+    } 
+    p <- p + theme_classic()
+      p
     }
   }
   
 })
 
-output$progTrend <- renderText({
+output$progTrend <- renderPrint({
   progSummary <- progSummary()@progSummary
   x_val <- input$prog_table_x
   x_val <- as.symbol(x_val)
   y_val <- input$prog_table_y
   y_val <- as.symbol(y_val)
-  progSummary <- progSummary %>% mutate(num.of.beads.shown = ifelse(blast_count == 0, 0, num.of.beads.shown))
+  progSummary <- progSummary %>% mutate(num.of.beads.shown = ifelse(blast_count == 0, 0, num.of.beads.shown)) 
   xDat <- unlist(progSummary[input$prog_table_x])
   yDat <- unlist(progSummary[input$prog_table_y])
   
-  if(input$colour_by_prog != "-"){
-    # dat <- progSummary
-    # colour_by <- as.symbol(input$colour_by_prog)
-    # 
-    # categories <- unique(unlist(progSummary[input$colour_by_prog]))
-    # fullSet <- unlist(progSummary[input$colour_by_prog])
-    # 
-    # counter <- 0
-    # print(categories)
-    # for(cat in categories){
-    #   counter <- counter + 1
-    #   dat$colour_val[fullSet == cat] <- as.character(counter)
-    # }
-    
-  }
+  if(input$colour_by_prog != "-" & input$shape_by_prog != "-"){
+    colour_by <- as.symbol(input$colour_by_prog)
+    shape_by <- as.symbol(input$shape_by_prog)
+    progSummary <- progSummary %>% mutate(x = !!x_val, y = !!y_val) 
+    fitted_models <- progSummary %>% group_by(!!colour_by, !!shape_by) %>% do(model = lm(y~x, data = .))
+    textData <- c(paste0("Grouped by: ", colour_by, " and ", shape_by))
+    for(i in 1:nrow(fitted_models)){
+      intVal <- round(summary(fitted_models$model[[i]])$coefficients[1],2)
+      gradVal <- round(summary(fitted_models$model[[i]])$coefficients[2],2)
+      rsqrVal <- round(summary(fitted_models$model[[i]])$adj.r.squared, 3)
+      tmpText <- paste0(colour_by, " value: ", fitted_models[i,1], ", ", shape_by, " value: ", fitted_models[i,2],  ", Intercept: ", intVal, ", Gradient: ", gradVal, ", R squared: ", rsqrVal)
+      textData <- c(textData, tmpText)
+    }
+    textData
+  }else if(input$colour_by_prog != "-" & input$shape_by_prog == "-"){
+    colour_by <- as.symbol(input$colour_by_prog)
+    progSummary <- progSummary %>% mutate(x = !!x_val, y = !!y_val) 
+    fitted_models <- progSummary %>% group_by(!!colour_by) %>% do(model = lm(y~x, data = .))
+    textData <- c(paste0("Grouped by: ", colour_by))
+    for(i in 1:nrow(fitted_models)){
+      intVal <- round(summary(fitted_models$model[[i]])$coefficients[1],2)
+      gradVal <- round(summary(fitted_models$model[[i]])$coefficients[2],2)
+      rsqrVal <- round(summary(fitted_models$model[[i]])$adj.r.squared, 3)
+      tmpText <- paste0(colour_by, " value: ", fitted_models[i,1], ", Intercept: ", intVal, ", Gradient: ", gradVal, ", R squared: ", rsqrVal)
+      textData <- c(textData, tmpText)
+    }
+    textData
+  }else if(input$colour_by_prog == "-" & input$shape_by_prog != "-"){
+    shape_by <- as.symbol(input$shape_by_prog)
+    progSummary <- progSummary %>% mutate(x = !!x_val, y = !!y_val) 
+    fitted_models <- progSummary %>% group_by(!!shape_by) %>% do(model = lm(y~x, data = .))
+    textData <- c(paste0("Grouped by: ", shape_by))
+    for(i in 1:nrow(fitted_models)){
+      intVal <- round(summary(fitted_models$model[[i]])$coefficients[1],2)
+      gradVal <- round(summary(fitted_models$model[[i]])$coefficients[2],2)
+      rsqrVal <- round(summary(fitted_models$model[[i]])$adj.r.squared, 3)
+      tmpText <- paste0(shape_by, " value: ", fitted_models[i,1], ", Intercept: ", intVal, ", Gradient: ", gradVal, ", R squared: ", rsqrVal)
+      textData <- c(textData, tmpText)
+    }
+    textData
+  }else{
    fit <- lm(yDat ~ xDat)
-   c("Intercept: ", round(fit$coefficients[1], 2), ", Gradient: ", round(fit$coefficients[2], 2), ", R squared: ", round(summary(fit)$adj.r.squared, 3))
+   textData <- paste0("Intercept: ", round(fit$coefficients[1], 2), ", Gradient: ", round(fit$coefficients[2], 2), ", R squared: ", round(summary(fit)$adj.r.squared, 3))
+   textData
+  }
    })
 
 # View data ---------------------------------------------------------------
@@ -367,6 +428,107 @@ output$random_image  <- renderUI({
 
 })
   
+  
+
+# Image selecting ---------------------------------------------------------
+  
+observeEvent(input$myFile, {
+    inFile <- input$myFile
+    if (is.null(inFile))
+      return()
+    file.remove("tmp/upload.jpg")
+    file.copy(inFile$datapath, file.path("tmp", "upload.jpg") )
+  })
+
+  
+output$set_image <- renderImage({
+      # Return a list
+  input$myFile
+      list(src = "tmp/upload.jpg",
+           alt = "This is alternate text")
+})
+
+  image_clicks <- reactiveValues(x_vals = NULL, y_vals = NULL, line_val = NULL)
+
+
+
+observeEvent(input$image_click_id, {
+
+  if (is.null(image_clicks$x_vals)) {
+    image_clicks$x_vals <- input$image_click_id$x
+    image_clicks$y_vals <- input$image_click_id$y
+    image_clicks$line_val <- input$line_position
+  } else {
+    image_clicks$x_vals <- c(image_clicks$x_vals, input$image_click_id$x)
+    image_clicks$y_vals <- c(image_clicks$y_vals, input$image_click_id$y)
+    image_clicks$line_val <- c(image_clicks$line_val, input$line_position)
+  }
+})
+
+output$image_click_output <- renderPrint({
+  data.frame(x = image_clicks$x_vals, y = image_clicks$y_vals)
+})
+  
+output$image_plot_values_tmp <- renderPlot({
+  if (is.null(image_clicks$x_vals)) {
+    NULL
+  }else{
+  dat <- data.frame(x = image_clicks$x_vals, y = (image_clicks$y_vals))
+  ggplot(data = dat, aes(x = x, y = y)) +
+    geom_point()
+  }
+})
+
+observeEvent(input$save_data_image, {
+  load("tmp/imageClickData.Rda")
+  
+  dat <- data.frame(x = image_clicks$x_vals, y = image_clicks$y_vals, type = image_clicks$line_val, 
+                               blast_count = input$blast_count_image,
+                               blast_duration = input$blast_length_image,
+                               run = input$replicate_image,
+                               current_blast = input$current_blast_image,
+                               move_val = input$move_value_image
+                               )
+  cornerData <- dat %>% filter(type == "corners")
+  upperCorners <- cornerData %>% arrange(y) %>% top_n(n = 2, wt = y) %>% mutate(y = -y)
+  rightCorners <- cornerData %>% arrange(x) %>% top_n(n = 2, wt = x) %>% mutate(y = -y)
+  minXU <- min(upperCorners$x)
+  minYU <- min(upperCorners$y)
+  minXR <- min(rightCorners$x)
+  minYR <- min(rightCorners$y)
+  upperCorners <- upperCorners %>% mutate(x = x - minXU, y = y - minYU)
+  rightCorners <- rightCorners %>% mutate(x = x - minXR, y = y - minYR)
+  
+  theta.x <- atan(max(upperCorners$y)/max(upperCorners$x))
+  theta.y <- atan(max(rightCorners$y)/max(rightCorners$x))
+  dat<- dat %>% mutate(y = -y) %>% mutate(y.adj = y - x * tan(theta.x),
+                                                                x.adj = x + y / tan(theta.y))
+  
+  dat <- dat %>% mutate(id = paste0(blast_duration, blast_count, run, move_val, current_blast))
+  imageClickData <- imageClickData %>% rbind(dat)
+  save(imageClickData, file = "tmp/imageClickData.Rda")
+  image_clicks$x_vals <- NULL
+  image_clicks$y_vals <- NULL
+  image_clicks$line_val <- NULL
+})
+
+observeEvent(input$clear_data_image, {
+  image_clicks$x_vals <- NULL
+  image_clicks$y_vals <- NULL
+  image_clicks$line_val <- NULL
+})
+
+output$image_plot_values <- renderPlot({
+  load("tmp/imageClickData.Rda")
+  
+  imageClickData <- imageClickData %>% mutate(side.group = ifelse(x.adj < 170, "l", "r")) %>% mutate(plot.group = paste0(id, type, side.group))
+  
+  ggplot() +
+    geom_point(data = imageClickData, aes(x = x.adj, y = y.adj, group = plot.group, color = type, shape = run)) +
+    geom_path(data = imageClickData %>% filter(type != "corners"), aes(x = x.adj, y = y.adj, group = plot.group, color = type)) 
+})
+
+
 } 
 
 

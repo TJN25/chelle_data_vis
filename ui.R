@@ -36,7 +36,8 @@ ui <- dashboardPage(
                                                  ),
                                                  menuItem("Data input", tabName = "data_input_tab", icon = icon("pen")
                                                  ),
-                                                 
+                                                 menuItem("Image processing", tabName = "image_proc_tab", icon = icon("photo-film")),
+                                                 menuItem("View image lines", tabName = "line_view_plot", icon = icon("chart-bar")),
                                                  menuItem("View Data",tabName =  "data_view_tab", icon = icon("table")),
                                                  menuItem("About", tabName = "about_tab", icon = icon("circle-info"))
                                      )
@@ -106,8 +107,8 @@ ui <- dashboardPage(
                                 ),
                                
                                 selectInput(inputId = 'replicate', label = "Run", choices = c("-", "1", "2", "3"), selected = "-", multiple = FALSE),
-                                selectInput(inputId = 'blast_count', label = "Number of blasts", choices = c("-", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), selected = "-", multiple = FALSE),
-                                selectInput(inputId = 'blast_length', label = "Blast length (seconds)", choices = c("-", "0.1", "1", "2", "3", "4"), selected = "-", multiple = FALSE),
+                                selectInput(inputId = 'blast_count', label = "Number of blasts", choices = c("-", "1", "2", "3", "6", "10", "20"), selected = "-", multiple = FALSE),
+                                selectInput(inputId = 'blast_length', label = "Blast length (seconds)", choices = c("-", "0.1", "1", "2", "4"), selected = "-", multiple = FALSE),
                                 checkboxInput(inputId = "move_value", label = "Blast location is moving", value = F),
                                 actionButton(inputId = "save_data", label = "Add data"),
                                 textOutput('data_input_help_message')
@@ -185,15 +186,39 @@ ui <- dashboardPage(
                         fluidRow(
                           column(width = 3, uiOutput(outputId = "prog_table_x_input")),
                           column(width = 3, uiOutput(outputId = "prog_table_y_input")),
-                          column(width = 3, uiOutput(outputId = "colour_by_prog_input"))
+                          column(width = 3, uiOutput(outputId = "colour_by_prog_input")),
+                          column(width = 3, uiOutput(outputId = "shape_by_prog_input"))
                         ),
                         uiOutput("show_trend_options"),
-                        textOutput("progTrend"),
+                        verbatimTextOutput("progTrend"),
                         plotOutput("progSummaryPlot")),
                         tabItem(tabName = "data_view_tab",
                                 DTOutput("blastDataTable"),
                                 downloadButton("downloadData", "Download")
                         ),
+                        tabItem(tabName = "image_proc_tab",
+                                fluidRow(
+                                column(width = 2, selectInput(inputId = 'replicate_image', label = "Run", choices = c("-", "1", "2", "3"), selected = "-", multiple = FALSE)),
+                                column(width = 2, selectInput(inputId = 'blast_count_image', label = "Number of blasts", choices = c("0", "1", "2", "3", "6", "10", "20"), selected = "-", multiple = FALSE)),
+                                column(width = 2, selectInput(inputId = 'blast_length_image', label = "Blast length (seconds)", choices = c("-", "0.1", "1", "2", "4"), selected = "-", multiple = FALSE)),
+                                column(width = 2, selectInput(inputId = 'current_blast_image', label = "Current blast", choices = c("0", "1", "2", "3", "6", "10", "20"), selected = "-", multiple = FALSE)),
+                                column(width = 2, checkboxInput(inputId = "move_value_image", label = "Blast location is moving", value = F)),
+                                column(width = 2, radioButtons(inputId = "line_position", choices = c("Corners" = "corners", "Top line" = "top_line", "Bottom line" = "bottom_line"), label = "Select the line or corners to click", selected = "corners"))
+                                ),
+                                fluidRow(
+                                column(width = 2, fileInput("myFile", "Choose a file", accept = c('image/png', 'image/jpeg'))),
+                                column(width = 1, actionButton(inputId = "save_data_image", label = "Add data")),
+                                column(width = 1, actionButton(inputId = "clear_data_image", label = "Clear selected points"))
+                                ),
+                                
+                                fluidRow(
+                                column(width = 5, imageOutput(outputId = "set_image", click = "image_click_id")),
+                                column(width = 5, plotOutput(outputId = "image_plot_values_tmp"))
+                                ),
+                                #verbatimTextOutput(outputId = "image_click_output")
+                                ),
+                        tabItem(tabName = "line_view_plot", 
+                                plotOutput(outputId = "image_plot_values")),
                         tabItem(tabName = "about_tab",
                                 uiOutput(outputId = "random_image"),
                                 helpText("Data gathering and science thinking stuff performed by MK Fitzgerald."),
@@ -202,7 +227,8 @@ ui <- dashboardPage(
                                        "Source code is available here"),
                                 helpText(""),
                                 tags$a(href="https://github.com/TJN25/chelle_data_vis/issues", 
-                                       "Support and discussion"))
+                                       "Support and discussion")
+                                )
                       )
                     )
 
