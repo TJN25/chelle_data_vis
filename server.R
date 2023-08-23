@@ -147,8 +147,21 @@ server <- function(input, output, session) {
 
 # Plots -------------------------------------------------------------------
 
+  barPlotInit <- reactive({
+    barPlotInit <- new(Class = "allBarPlotsClass", blastData = blastData)
+    barPlotInit
+  })
+  
   barPlotData <- reactive({
-    barPlotData <- new(Class = "allBarPlotsClass", blastData = blastData)
+    barPlotData <- barPlotInit()
+    barPlotData@moving <- as.logical(input$move_plot)
+    barPlotData@stack_colours <- input$stack_colours_plot
+    barPlotData@blast_duration <- as.numeric(input$blast_length_plot)
+    barPlotData@blast_count <- as.numeric(input$blast_count_plot)
+    barPlotData@run <- as.numeric(input$replicate_plot)
+    barPlotData@combine_replicates <- input$combine_replicates_plot
+    barPlotData <- selectData(barPlotData)
+    barPlotData <- generatePlot(barPlotData)
     barPlotData
   })
   
@@ -210,15 +223,8 @@ server <- function(input, output, session) {
   
 output$all_bar_plots <- renderPlot({
   barPlotData <- barPlotData()
-  barPlotData@moving <- as.logical(input$move_plot)
-  barPlotData@stack_colours <- input$stack_colours_plot
-  barPlotData@blast_duration <- as.numeric(input$blast_length_plot)
-  barPlotData@blast_count <- as.numeric(input$blast_count_plot)
-  barPlotData@run <- as.numeric(input$replicate_plot)
-  barPlotData@combine_replicates <- input$combine_replicates_plot
-  barPlotData <- selectData(barPlotData)
-  barPlotData <- generatePlot(barPlotData)
-  barPlotData@p
+  barPlotData@p[[1]]
+#  barPlotData@p
 })
 
 output$columns_and_rows_plot <- renderPlot({
@@ -349,6 +355,7 @@ output$progTrend <- renderPrint({
     progSummary <- progSummary %>% mutate(x = !!x_val, y = !!y_val) 
     fitted_models <- progSummary %>% group_by(!!colour_by, !!shape_by) %>% do(model = lm(y~x, data = .))
     textData <- c(paste0("Grouped by: ", colour_by, " and ", shape_by))
+    
     for(i in 1:nrow(fitted_models)){
       intVal <- round(summary(fitted_models$model[[i]])$coefficients[1],2)
       gradVal <- round(summary(fitted_models$model[[i]])$coefficients[2],2)
@@ -389,6 +396,17 @@ output$progTrend <- renderPrint({
    textData
   }
    })
+
+output$save_plot_1 <- downloadHandler(
+  filename = function() {
+    paste("barplot", ".jpg", sep = "")
+  },
+  content = function(file) {
+    barPlotData <- barPlotData()
+    p <- barPlotData@p[[1]]
+    ggsave(filename = file, plot = p, device = "svg", height = 500, units = "px")
+  }
+)
 
 # View data ---------------------------------------------------------------
 output$blastDataTable <- renderDT({

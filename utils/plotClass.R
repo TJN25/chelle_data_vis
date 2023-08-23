@@ -355,7 +355,7 @@ setMethod("plotBlastPoints", signature = c(allBlasts = "data.frame"),
                                                                   "Number of blasts (duration = 0.1s) moving",
                                                                   "Duration of blasts (1 blast)"))
             allBlasts <- allBlasts %>% rbind(blast0.11)
-            allBlasts <- allBlasts %>% mutate(keep.2 = ifelse(blast_duration == 2 & blast_count == 0, F, ifelse(blast_duration == 1 & move_val, F, ifelse(blast_duration == 4, F, T)))) %>% filter(keep.2) %>% select(-keep.2)
+            allBlasts <- allBlasts %>% mutate(keep.2 = ifelse(blast_duration == 2 & blast_count == 0, F, ifelse(blast_duration == 1 & move_val, F, ifelse(blast_duration == 4 & blast_count == 0, F, T)))) %>% filter(keep.2) %>% select(-keep.2)
             p <- ggplot(data = allBlasts) + 
               geom_point(aes(x = x, y = y, group = colour), size = bead_weight/10, color = allBlasts$use_colour, alpha = allBlasts$alphaVal) +
               facet_grid(y_cat ~ x_cat, labeller = labeller(x_cat = countLabel)) +

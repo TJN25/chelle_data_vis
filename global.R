@@ -15,6 +15,9 @@ library(ggpubr)
 library("data.table")
 library(reshape2)
 
+
+#TODO https://stats.stackexchange.com/questions/435644/is-there-a-method-to-look-for-significant-difference-between-two-linear-regressi
+
 # library(rdrop2)
 # modules
 source("background-colours.R")

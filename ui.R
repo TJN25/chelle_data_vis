@@ -127,7 +127,8 @@ ui <- dashboardPage(
                                 fluidRow(
                                   column(width = 2, checkboxInput(inputId = "stack_colours_plot", label = "Stack colours", value = F)),
                                   column(width = 2, checkboxInput(inputId = "combine_replicates_plot", "Combine data from each replicate", value = F))
-                                )
+                                ),
+                                downloadButton(outputId = "save_plot_1", label = "Download")
                                ),
                         
                         tabItem(tabName = "plot_2",
