@@ -483,6 +483,17 @@ observeEvent(input$image_click_id, {
   }
 })
 
+observeEvent(input$image_click_remove_last, {
+  
+  if (length(image_clicks$x_vals) > 0) {
+    image_clicks$x_vals <- image_clicks$x_vals[1:(length(image_clicks$x_vals) - 1)]
+    image_clicks$y_vals <- image_clicks$y_vals[1:(length(image_clicks$y_vals) - 1)]
+    image_clicks$line_val <- image_clicks$line_val[1:(length(image_clicks$line_val) - 1)]
+  } else {
+    
+  }
+})
+
 output$image_click_output <- renderPrint({
   data.frame(x = image_clicks$x_vals, y = image_clicks$y_vals)
 })
@@ -491,11 +502,60 @@ output$image_plot_values_tmp <- renderPlot({
   if (is.null(image_clicks$x_vals)) {
     NULL
   }else{
-  dat <- data.frame(x = image_clicks$x_vals, y = (image_clicks$y_vals))
-  ggplot(data = dat, aes(x = x, y = y)) +
-    geom_point()
+  dat <- data.frame(x = image_clicks$x_vals, y = (image_clicks$y_vals), type = image_clicks$line_val)
+  cornerData <- dat %>% filter(type == "corners")
+  upperCorners <- cornerData %>% arrange(y) %>% top_n(n = 2, wt = y) %>% mutate(y = -y)
+  rightCorners <- cornerData %>% arrange(x) %>% top_n(n = 2, wt = x) %>% mutate(y = -y)
+  minXU <- min(upperCorners$x)
+  minYU <- min(upperCorners$y)
+  minXR <- min(rightCorners$x)
+  minYR <- min(rightCorners$y)
+  upperCorners <- upperCorners %>% mutate(x = x - minXU, y = y - minYU)
+  rightCorners <- rightCorners %>% mutate(x = x - minXR, y = y - minYR)
+  
+  theta.x <- atan(max(upperCorners$y)/max(upperCorners$x))
+  theta.y <- atan(max(rightCorners$y)/max(rightCorners$x))
+  dat<- dat %>% mutate(y = -y) %>% mutate(y.adj = y - x * tan(theta.x),
+                                          x.adj = x + y / tan(theta.y))
+  dat <- dat %>% mutate(side.group = ifelse(x.adj < 170, "l", "r")) %>% mutate(plot.group = paste0(type, side.group))
+  ggplot() +
+    geom_point(data = dat, aes(x = x.adj, y = y.adj, group = plot.group, color = type)) +
+    geom_path(data = dat %>% filter(type != "corners"), aes(x = x.adj, y = y.adj, group = plot.group)) +
+    theme_classic()
   }
 })
+
+output$image_angle_text <- renderText({
+  if (is.null(image_clicks$x_vals)) {
+    "Nothing selected yet"
+  }else{
+    angleValue <- "Nothing selected yet"
+    dat <- data.frame(x = image_clicks$x_vals, y = (image_clicks$y_vals), type = image_clicks$line_val)
+    cornerData <- dat %>% filter(type == "corners")
+    upperCorners <- cornerData %>% arrange(y) %>% top_n(n = 2, wt = y) %>% mutate(y = -y)
+    rightCorners <- cornerData %>% arrange(x) %>% top_n(n = 2, wt = x) %>% mutate(y = -y)
+    minXU <- min(upperCorners$x)
+    minYU <- min(upperCorners$y)
+    minXR <- min(rightCorners$x)
+    minYR <- min(rightCorners$y)
+    upperCorners <- upperCorners %>% mutate(x = x - minXU, y = y - minYU)
+    rightCorners <- rightCorners %>% mutate(x = x - minXR, y = y - minYR)
+    
+    theta.x <- atan(max(upperCorners$y)/max(upperCorners$x))
+    theta.y <- atan(max(rightCorners$y)/max(rightCorners$x))
+    dat<- dat %>% mutate(y = -y) %>% mutate(y.adj = y - x * tan(theta.x),
+                                            x.adj = x + y / tan(theta.y))
+    dat <- dat %>% mutate(side.group = ifelse(x.adj < 170, "l", "r")) %>% mutate(plot.group = paste0(type, side.group))
+    
+    angles <- dat %>% filter(type == "angle_value")
+    yDiff <- abs(angles$y.adj[1] - angles$y.adj[2])
+    xDiff <- abs(angles$x.adj[1] - angles$x.adj[2])
+    angleValue <- atan(yDiff/xDiff)*180/pi
+    angleValue
+    
+  }
+})
+
 
 observeEvent(input$save_data_image, {
   load("tmp/imageClickData.Rda")

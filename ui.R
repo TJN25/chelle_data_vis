@@ -204,14 +204,15 @@ ui <- dashboardPage(
                                 column(width = 2, selectInput(inputId = 'blast_length_image', label = "Blast length (seconds)", choices = c("-", "0.1", "1", "2", "4"), selected = "-", multiple = FALSE)),
                                 column(width = 2, selectInput(inputId = 'current_blast_image', label = "Current blast", choices = c("0", "1", "2", "3", "6", "10", "20"), selected = "-", multiple = FALSE)),
                                 column(width = 2, checkboxInput(inputId = "move_value_image", label = "Blast location is moving", value = F)),
-                                column(width = 2, radioButtons(inputId = "line_position", choices = c("Corners" = "corners", "Top line" = "top_line", "Bottom line" = "bottom_line"), label = "Select the line or corners to click", selected = "corners"))
+                                column(width = 2, radioButtons(inputId = "line_position", choices = c("Corners" = "corners", "Top Blue Line" = "top_line", "Bottom Blue Line" = "bottom_line", "Angle selection (Click two points)" = "angle_value"), label = "Select the line or corners to click", selected = "corners"))
                                 ),
                                 fluidRow(
                                 column(width = 2, fileInput("myFile", "Choose a file", accept = c('image/png', 'image/jpeg'))),
                                 column(width = 1, actionButton(inputId = "save_data_image", label = "Add data")),
-                                column(width = 1, actionButton(inputId = "clear_data_image", label = "Clear selected points"))
+                                column(width = 1, actionButton(inputId = "clear_data_image", label = "Clear selected points")),
+                                column(width = 1, actionButton(inputId = "image_click_remove_last", label = "Remove last point"))
                                 ),
-                                
+                                textOutput(outputId = "image_angle_text"),
                                 fluidRow(
                                 column(width = 5, imageOutput(outputId = "set_image", click = "image_click_id")),
                                 column(width = 5, plotOutput(outputId = "image_plot_values_tmp"))
