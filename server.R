@@ -113,6 +113,40 @@ server <- function(input, output, session) {
     )
   })
   
+  
+  
+  
+  
+  output$colour_by_lines_input <- renderUI({
+    selectInput(inputId = 'colour_by_lines', label = "Colour by: ", choices = c(colnames(imageDataInit())), selected = "type", multiple = F)
+  })
+  
+  output$shape_by_lines_input <- renderUI({
+    selectInput(inputId = 'shape_by_lines', label = "Shape by: ", choices = c(colnames(imageDataInit())), selected = "run", multiple = F)
+  })
+  
+  output$blast_duration_lines_input <- renderUI({
+    selectInput(inputId = 'blast_duration_lines', label = "Blast duration (seconds)", choices = unique(imageDataInit()$blast_duration), selected = unique(imageDataInit()$blast_duration), multiple = T)
+  })
+  
+  output$blast_count_lines_input <- renderUI({
+    selectInput(inputId = 'blast_count_lines', label = "Blast count", choices = unique(imageDataInit()$blast_count), selected = unique(imageDataInit()$blast_count), multiple = T)
+  })
+  
+  output$run_lines_input <- renderUI({
+    selectInput(inputId = 'run_lines', label = "Run", choices = unique(imageDataInit()$run), selected = unique(imageDataInit()$run), multiple = T)
+  })
+  
+  output$move_val_lines_input <- renderUI({
+    selectInput(inputId = 'move_val_lines', label = "Moving?", choices = unique(imageDataInit()$move_val), selected = unique(imageDataInit()$move_val), multiple = T)
+  })
+  
+  output$current_blast_lines_input <- renderUI({
+    selectInput(inputId = 'current_blast_lines', label = "Selected Blasts", choices = unique(imageDataInit()$current_blast), selected = unique(imageDataInit()$current_blast), multiple = T)
+  })
+  
+  
+  
 # Data input --------------------------------------------------------------
   setBackgroudColourCustom()
   dataInputReactive <- reactiveValues()
@@ -466,12 +500,9 @@ output$set_image <- renderImage({
            alt = "This is alternate text")
 })
 
-  image_clicks <- reactiveValues(x_vals = NULL, y_vals = NULL, line_val = NULL)
-
-
+image_clicks <- reactiveValues(x_vals = NULL, y_vals = NULL, line_val = NULL)
 
 observeEvent(input$image_click_id, {
-
   if (is.null(image_clicks$x_vals)) {
     image_clicks$x_vals <- input$image_click_id$x
     image_clicks$y_vals <- input$image_click_id$y
@@ -497,6 +528,10 @@ observeEvent(input$image_click_remove_last, {
 output$image_click_output <- renderPrint({
   data.frame(x = image_clicks$x_vals, y = image_clicks$y_vals)
 })
+
+output$image_click_output_verbatim <- renderPrint({
+  input$image_click_id
+})
   
 output$image_plot_values_tmp <- renderPlot({
   if (is.null(image_clicks$x_vals)) {
@@ -517,7 +552,23 @@ output$image_plot_values_tmp <- renderPlot({
   theta.y <- atan(max(rightCorners$y)/max(rightCorners$x))
   dat<- dat %>% mutate(y = -y) %>% mutate(y.adj = y - x * tan(theta.x),
                                           x.adj = x + y / tan(theta.y))
-  dat <- dat %>% mutate(side.group = ifelse(x.adj < 170, "l", "r")) %>% mutate(plot.group = paste0(type, side.group))
+  
+  corners <- dat %>% filter(type == "corners")
+  minX <- min(corners$x.adj)
+  minY <- min(corners$y.adj)
+ 
+  dat$x.adj <- dat$x.adj - minX
+  dat$y.adj <- dat$y.adj - minY
+  
+  corners <- dat %>% filter(type == "corners")
+  maxY <- max(corners$y.adj)
+  maxX <- max(corners$x.adj)
+  
+  dat$x.adj <- dat$x.adj*(37/maxX)
+  dat$y.adj <- dat$y.adj*(26/maxY)
+  
+  dat <- dat %>% mutate(side.group = ifelse(type == "bowl_value", "bowl", ifelse(x.adj < 19, "l", "r"))) %>% mutate(plot.group = paste0(type, side.group))
+  
   ggplot() +
     geom_point(data = dat, aes(x = x.adj, y = y.adj, group = plot.group, color = type)) +
     geom_path(data = dat %>% filter(type != "corners"), aes(x = x.adj, y = y.adj, group = plot.group)) +
@@ -551,11 +602,10 @@ output$image_angle_text <- renderText({
     yDiff <- abs(angles$y.adj[1] - angles$y.adj[2])
     xDiff <- abs(angles$x.adj[1] - angles$x.adj[2])
     angleValue <- atan(yDiff/xDiff)*180/pi
-    angleValue
+    paste0("Selected angle is: ",angleValue)
     
   }
 })
-
 
 observeEvent(input$save_data_image, {
   load("tmp/imageClickData.Rda")
@@ -583,6 +633,22 @@ observeEvent(input$save_data_image, {
                                                                 x.adj = x + y / tan(theta.y))
   
   dat <- dat %>% mutate(id = paste0(blast_duration, blast_count, run, move_val, current_blast))
+  
+  
+  corners <- dat %>% filter(type == "corners")
+  minX <- min(corners$x.adj)
+  minY <- min(corners$y.adj)
+  
+  dat$x.adj <- dat$x.adj - minX
+  dat$y.adj <- dat$y.adj - minY
+  
+  corners <- dat %>% filter(type == "corners")
+  maxY <- max(corners$y.adj)
+  maxX <- max(corners$x.adj)
+  
+  dat$x.adj <- dat$x.adj*(37/maxX)
+  dat$y.adj <- dat$y.adj*(26/maxY)
+  
   imageClickData <- imageClickData %>% rbind(dat)
   save(imageClickData, file = "tmp/imageClickData.Rda")
   image_clicks$x_vals <- NULL
@@ -596,16 +662,50 @@ observeEvent(input$clear_data_image, {
   image_clicks$line_val <- NULL
 })
 
-output$image_plot_values <- renderPlot({
+imageDataInit <- reactive({
   load("tmp/imageClickData.Rda")
-  
-  imageClickData <- imageClickData %>% mutate(side.group = ifelse(x.adj < 170, "l", "r")) %>% mutate(plot.group = paste0(id, type, side.group))
-  
-  ggplot() +
-    geom_point(data = imageClickData, aes(x = x.adj, y = y.adj, group = plot.group, color = type, shape = run)) +
-    geom_path(data = imageClickData %>% filter(type != "corners"), aes(x = x.adj, y = y.adj, group = plot.group, color = type)) 
+  imageClickData
 })
 
+imageData <- reactive({
+  imageClickData <- imageDataInit()
+  imageClickData <- imageClickData %>% mutate(side.group = ifelse(type == "bowl_value", "bowl", ifelse(x.adj < 19, "l", "r"))) %>% mutate(plot.group = paste0(id, type, side.group))
+  imageClickData <- imageClickData[imageClickData$type %in% input$line_type_plotting,]
+
+  imageClickData <- imageClickData[imageClickData$move_val %in% as.logical(input$move_val_lines),]
+  imageClickData <- imageClickData[imageClickData$blast_duration %in% as.numeric(input$blast_duration_lines),]
+  imageClickData <- imageClickData[imageClickData$blast_count %in% as.numeric(input$blast_count_lines),]
+  imageClickData <- imageClickData[imageClickData$run %in% as.numeric(input$run_lines),]
+  imageClickData <- imageClickData[imageClickData$current_blast %in% as.numeric(input$current_blast_lines),]
+  imageClickData
+  
+})
+
+image_plot <- reactive({
+  imageClickData <- imageData()
+  colour_by <- input$colour_by_lines
+  colour_by <- as.symbol(colour_by)
+  shape_by <- input$shape_by_lines
+  shape_by <- as.symbol(shape_by)
+  
+  ggplot() +
+    geom_point(data = imageClickData, aes(x = x.adj, y = y.adj, group = plot.group, color = !!colour_by, shape = !!shape_by)) +
+    geom_path(data = imageClickData %>% filter(type != "corners"), aes(x = x.adj, y = y.adj, group = plot.group, color = !!colour_by)) +
+    theme_classic()
+})
+
+output$imagePlotVerbatim <- renderPrint({
+  imageClickData <- imageData()
+  imageClickData
+})
+
+output$image_plot_values <- renderPlot({
+  image_plot()
+})
+
+output$image_plot_values_output <- renderUI({
+  plotOutput(outputId = "image_plot_values", height = 600, width = 800, "px")
+})
 
 } 
 

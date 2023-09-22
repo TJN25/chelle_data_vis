@@ -202,25 +202,43 @@ ui <- dashboardPage(
                                 column(width = 2, selectInput(inputId = 'replicate_image', label = "Run", choices = c("-", "1", "2", "3"), selected = "-", multiple = FALSE)),
                                 column(width = 2, selectInput(inputId = 'blast_count_image', label = "Number of blasts", choices = c("0", "1", "2", "3", "6", "10", "20"), selected = "-", multiple = FALSE)),
                                 column(width = 2, selectInput(inputId = 'blast_length_image', label = "Blast length (seconds)", choices = c("-", "0.1", "1", "2", "4"), selected = "-", multiple = FALSE)),
-                                column(width = 2, selectInput(inputId = 'current_blast_image', label = "Current blast", choices = c("0", "1", "2", "3", "6", "10", "20"), selected = "-", multiple = FALSE)),
+                                column(width = 2, selectInput(inputId = 'current_blast_image', label = "Current blast", choices = c("0", "1", "2", "3", "4", "5", "6", 
+                                                                                                                                    "7", "8", "9", "10", "11", "12", "13",
+                                                                                                                                    "14", "15", "16", "17", "18", "19", "20"), selected = "-", multiple = FALSE)),
                                 column(width = 2, checkboxInput(inputId = "move_value_image", label = "Blast location is moving", value = F)),
-                                column(width = 2, radioButtons(inputId = "line_position", choices = c("Corners" = "corners", "Top Blue Line" = "top_line", "Bottom Blue Line" = "bottom_line", "Angle selection (Click two points)" = "angle_value"), label = "Select the line or corners to click", selected = "corners"))
+                                column(width = 2, radioButtons(inputId = "line_position", choices = c("Corners" = "corners", "Top Blue Line" = "top_line", "Bottom Blue Line" = "bottom_line", "Angle selection (Click two points)" = "angle_value", "Bowl" = "bowl_value"), label = "Select the line or corners to click", selected = "corners"))
                                 ),
                                 fluidRow(
                                 column(width = 2, fileInput("myFile", "Choose a file", accept = c('image/png', 'image/jpeg'))),
                                 column(width = 1, actionButton(inputId = "save_data_image", label = "Add data")),
-                                column(width = 1, actionButton(inputId = "clear_data_image", label = "Clear selected points")),
+                                column(width = 2, actionButton(inputId = "clear_data_image", label = "Clear selected points")),
                                 column(width = 1, actionButton(inputId = "image_click_remove_last", label = "Remove last point"))
                                 ),
                                 textOutput(outputId = "image_angle_text"),
                                 fluidRow(
-                                column(width = 5, imageOutput(outputId = "set_image", click = "image_click_id")),
-                                column(width = 5, plotOutput(outputId = "image_plot_values_tmp"))
+                                column(width = 7, imageOutput(outputId = "set_image", click = "image_click_id")),
+                                column(width = 3, plotOutput(outputId = "image_plot_values_tmp", height = "400", width = "350", "px"))
                                 ),
                                 #verbatimTextOutput(outputId = "image_click_output")
                                 ),
                         tabItem(tabName = "line_view_plot", 
-                                plotOutput(outputId = "image_plot_values")),
+                                fluidRow(
+                                  column(width = 3, selectInput(inputId = "line_type_plotting", label = "Lines to plot", choices = c("Corners" = "corners", "Top Blue Line" = "top_line", "Bottom Blue Line" = "bottom_line", "Angle selection (Click two points)" = "angle_value", "Bowl" = "bowl_value"),
+                                            selected = c("top_line", "bottom_line", "bowl_value"), multiple = T)),
+                                  column(width = 3, uiOutput(outputId = "colour_by_lines_input")),
+                                  column(width = 3, uiOutput(outputId = "shape_by_lines_input"))
+                                  
+                                  ),
+                                fluidRow(
+                                  column(width = 2, uiOutput(outputId = "blast_count_lines_input"),
+                                         uiOutput(outputId = "blast_duration_lines_input")),
+                                  column(width = 2, uiOutput(outputId = "move_val_lines_input"),
+                                         uiOutput(outputId = "run_lines_input")
+                                  ),
+                                  column(width = 2, uiOutput(outputId = "current_blast_lines_input"))
+                                ),
+                                #verbatimTextOutput(outputId = "imagePlotVerbatim"),
+                                uiOutput(outputId = "image_plot_values_output")),
                         tabItem(tabName = "about_tab",
                                 uiOutput(outputId = "random_image"),
                                 helpText("Data gathering and science thinking stuff performed by MK Fitzgerald."),
