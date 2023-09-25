@@ -227,7 +227,7 @@ ui <- dashboardPage(
                                             selected = c("top_line", "bottom_line", "bowl_value"), multiple = T)),
                                   column(width = 3, uiOutput(outputId = "colour_by_lines_input")),
                                   column(width = 3, uiOutput(outputId = "shape_by_lines_input")),
-                                  column(width = 1, checkboxInput(inputId = "opacity_lines", label = "Change line opacity by current blast number", value = T))
+                                  column(width = 1, radioButtons(inputId = "opacity_lines", label = "Change line opacity:", choices = c("By current blast" = "current_blast", "By blast duration" = "blast_duration", "None" = "none"), selected = "none"))
                                   
                                   ),
                                 fluidRow(

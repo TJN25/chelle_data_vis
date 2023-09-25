@@ -691,7 +691,7 @@ image_plot <- reactive({
   
  
   
-  if(input$opacity_lines) {
+  if(input$opacity_lines == "current_blast") {
     currentBlasts <- length(unique(imageClickData$current_blast))
     alphaIncrement <- 1/(currentBlasts)
     alphaData <- data.frame(current_blast = sort(as.numeric(unique(imageClickData$current_blast))))
@@ -700,6 +700,17 @@ image_plot <- reactive({
     print(colnames(imageClickData))
     imageClickData <- imageClickData %>% left_join(alphaData, by = "current_blast") 
     print(imageClickData)
+    ggplot() +
+      geom_point(data = imageClickData, aes(x = x.adj, y = y.adj, group = plot.group, color = !!colour_by, shape = !!shape_by), alpha = imageClickData$alpha.val) +
+      geom_path(data = imageClickData %>% filter(type != "corners"), aes(x = x.adj, y = y.adj, group = plot.group, color = !!colour_by), alpha = imageClickData$alpha.val, size = 2) +
+      theme_classic()
+  }else if(input$opacity_lines == "blast_duration") {
+    currentBlasts <- length(unique(imageClickData$blast_duration))
+    alphaIncrement <- 1/(currentBlasts)
+    alphaData <- data.frame(blast_duration = sort(as.numeric(unique(imageClickData$blast_duration))))
+    alphaData <- alphaData %>% mutate(alpha.val = row_number() * alphaIncrement, 
+                                      blast_duration = as.character(blast_duration))
+    imageClickData <- imageClickData %>% left_join(alphaData, by = "blast_duration") 
     ggplot() +
       geom_point(data = imageClickData, aes(x = x.adj, y = y.adj, group = plot.group, color = !!colour_by, shape = !!shape_by), alpha = imageClickData$alpha.val) +
       geom_path(data = imageClickData %>% filter(type != "corners"), aes(x = x.adj, y = y.adj, group = plot.group, color = !!colour_by), alpha = imageClickData$alpha.val, size = 2) +
