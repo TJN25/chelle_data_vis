@@ -617,7 +617,8 @@ observeEvent(input$save_data_image, {
                                current_blast = input$current_blast_image,
                                move_val = input$move_value_image
                                )
-  cornerData <- dat %>% filter(type == "corners")
+  dat <- dat %>% unique()
+  cornerData <- dat %>% filter(type == "corners") %>% unique()
   upperCorners <- cornerData %>% arrange(y) %>% top_n(n = 2, wt = y) %>% mutate(y = -y)
   rightCorners <- cornerData %>% arrange(x) %>% top_n(n = 2, wt = x) %>% mutate(y = -y)
   minXU <- min(upperCorners$x)
@@ -688,10 +689,29 @@ image_plot <- reactive({
   shape_by <- input$shape_by_lines
   shape_by <- as.symbol(shape_by)
   
-  ggplot() +
-    geom_point(data = imageClickData, aes(x = x.adj, y = y.adj, group = plot.group, color = !!colour_by, shape = !!shape_by)) +
-    geom_path(data = imageClickData %>% filter(type != "corners"), aes(x = x.adj, y = y.adj, group = plot.group, color = !!colour_by)) +
-    theme_classic()
+ 
+  
+  if(input$opacity_lines) {
+    currentBlasts <- length(unique(imageClickData$current_blast))
+    alphaIncrement <- 1/(currentBlasts)
+    alphaData <- data.frame(current_blast = sort(as.numeric(unique(imageClickData$current_blast))))
+    alphaData <- alphaData %>% mutate(alpha.val = (row_number() - 1) * alphaIncrement, 
+                                      current_blast = as.character(current_blast))
+    print(colnames(imageClickData))
+    imageClickData <- imageClickData %>% left_join(alphaData, by = "current_blast") 
+    print(imageClickData)
+    ggplot() +
+      geom_point(data = imageClickData, aes(x = x.adj, y = y.adj, group = plot.group, color = !!colour_by, shape = !!shape_by), alpha = imageClickData$alpha.val) +
+      geom_path(data = imageClickData %>% filter(type != "corners"), aes(x = x.adj, y = y.adj, group = plot.group, color = !!colour_by), alpha = imageClickData$alpha.val, size = 2) +
+      theme_classic()
+  }else {
+    ggplot() +
+      geom_point(data = imageClickData, aes(x = x.adj, y = y.adj, group = plot.group, color = !!colour_by, shape = !!shape_by)) +
+      geom_path(data = imageClickData %>% filter(type != "corners"), aes(x = x.adj, y = y.adj, group = plot.group, color = !!colour_by)) +
+      theme_classic()
+  }
+  
+  
 })
 
 output$imagePlotVerbatim <- renderPrint({
@@ -705,6 +725,12 @@ output$image_plot_values <- renderPlot({
 
 output$image_plot_values_output <- renderUI({
   plotOutput(outputId = "image_plot_values", height = 600, width = 800, "px")
+})
+
+# Git  --------------------------------------------------------------------
+
+observeEvent(input$git_pull, {
+  print("clicked")
 })
 
 } 

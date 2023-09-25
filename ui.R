@@ -226,7 +226,8 @@ ui <- dashboardPage(
                                   column(width = 3, selectInput(inputId = "line_type_plotting", label = "Lines to plot", choices = c("Corners" = "corners", "Top Blue Line" = "top_line", "Bottom Blue Line" = "bottom_line", "Angle selection (Click two points)" = "angle_value", "Bowl" = "bowl_value"),
                                             selected = c("top_line", "bottom_line", "bowl_value"), multiple = T)),
                                   column(width = 3, uiOutput(outputId = "colour_by_lines_input")),
-                                  column(width = 3, uiOutput(outputId = "shape_by_lines_input"))
+                                  column(width = 3, uiOutput(outputId = "shape_by_lines_input")),
+                                  column(width = 1, checkboxInput(inputId = "opacity_lines", label = "Change line opacity by current blast number", value = T))
                                   
                                   ),
                                 fluidRow(
@@ -247,7 +248,11 @@ ui <- dashboardPage(
                                        "Source code is available here"),
                                 helpText(""),
                                 tags$a(href="https://github.com/TJN25/chelle_data_vis/issues", 
-                                       "Support and discussion")
+                                       "Support and discussion"),
+                                fluidRow(
+                                  column(width = 2, actionButton(inputId = "git_pull", label = "Get updates")),
+                                  column(width = 2 ,actionButton(inputId = "git_push", label = "Backup data"))
+                                )
                                 )
                       )
                     )
