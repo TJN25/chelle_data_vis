@@ -695,7 +695,7 @@ image_plot <- reactive({
     currentBlasts <- length(unique(imageClickData$current_blast))
     alphaIncrement <- 1/(currentBlasts)
     alphaData <- data.frame(current_blast = sort(as.numeric(unique(imageClickData$current_blast))))
-    alphaData <- alphaData %>% mutate(alpha.val = (row_number() - 1) * alphaIncrement, 
+    alphaData <- alphaData %>% mutate(alpha.val = row_number() * alphaIncrement, 
                                       current_blast = as.character(current_blast))
     print(colnames(imageClickData))
     imageClickData <- imageClickData %>% left_join(alphaData, by = "current_blast") 
