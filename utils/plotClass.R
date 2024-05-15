@@ -107,8 +107,9 @@ setMethod("weightToProportion", signature = c(plotData = "data.frame"),
 setGeneric("friendlyId", function(plotData) standardGeneric("friendlyId"))
 setMethod("friendlyId", signature = c(plotData = "data.frame"), 
           function(plotData){
-            plotData <- plotData %>% mutate(blast.id = paste("Replicate:", run, ", No. blasts: ", 
-                                                             blast_count, ", Duration: ", blast_duration, ifelse(move_val, ", moved", ", static")))
+            #plotData <- plotData %>% mutate(blast.id = paste("Replicate:", run, ", No. blasts: ", 
+            #                                                 blast_count, ", Duration: ", blast_duration, ifelse(move_val, ", moved", ", static")))
+            plotData <- plotData %>% mutate(blast.id = blast_count)
             return(plotData)
           })
 
@@ -141,10 +142,12 @@ setMethod("selectData", signature = c(x = "selectedDataClass"),
               dat <- dat %>% group_by(blast_duration, blast_count, row, move_val, column, Colour) %>% 
                 summarise(combined.weight = sum(Weight)) %>% 
                 dplyr::rename(Weight = combined.weight) %>% 
-                mutate(blast.id = paste("No. blasts: ", 
-                                        blast_count, ", Duration: ", 
-                                        blast_duration, ifelse(move_val, ", moving", ", static")))
+                # mutate(blast.id = paste("No. blasts: ", 
+                #                         blast_count, ", Duration: ", 
+                #                         blast_duration, ifelse(move_val, ", moving", ", static")))
+              mutate(blast.id = blast_duration)
               
+                            
             }else{
               dat <- dat[dat$run %in% runVals,]
               dat <- dat[dat$blast_count %in% blastCounts,]
@@ -223,7 +226,7 @@ setMethod("generatePlot", signature = c("progressionPlotClass"),
 setGeneric("plotData", function(x) standardGeneric("plotData"))
 setMethod("plotData", signature = c("allBarPlotsClass"), 
           function(x){
-            plotData <- x@selectedData  %>% mutate(use_colour = ifelse(Colour == "yellow", "#FFDB33", ifelse(Colour == "red", "#FF3333", "#339BFF")))
+            plotData <- x@selectedData  %>% mutate(use_colour = ifelse(Colour == "yellow", "#FFF37D", ifelse(Colour == "red", "#EE36BB", "#46ADC3")))
             if(x@stack_colours){
               stackColours = "stack"
             }else{
@@ -311,7 +314,7 @@ setMethod("simulateBlasts", signature = c(x = "progressionPlotClass"),
             
             allBlasts <- selectedData %>% rbind(extraBlasts) %>% mutate(y = y + 3 - row,
                                               x = x + column - 1) %>% 
-              mutate(use_colour = ifelse(Colour == "yellow", "#E79F00", ifelse(Colour == "red", "#FF3333", ifelse(Colour == "blue", "#339BFF", "#FFFFFF")))) %>% 
+              mutate(use_colour = ifelse(Colour == "yellow", "#FFF37D", ifelse(Colour == "red", "#EE36BB", ifelse(Colour == "blue", "#46ADC3", "#FFFFFF")))) %>% 
               dplyr::rename(colour = Colour) %>% 
               select(x, y, colour, use_colour, blast_count, blast_duration, move_val, run)
             
@@ -356,6 +359,7 @@ setMethod("plotBlastPoints", signature = c(allBlasts = "data.frame"),
                                                                   "Duration of blasts (1 blast)"))
             allBlasts <- allBlasts %>% rbind(blast0.11)
             allBlasts <- allBlasts %>% mutate(keep.2 = ifelse(blast_duration == 2 & blast_count == 0, F, ifelse(blast_duration == 1 & move_val, F, ifelse(blast_duration == 4 & blast_count == 0, F, T)))) %>% filter(keep.2) %>% select(-keep.2)
+            print(allBlasts$use_colour)
             p <- ggplot(data = allBlasts) + 
               geom_point(aes(x = x, y = y, group = colour), size = bead_weight/10, color = allBlasts$use_colour, alpha = allBlasts$alphaVal) +
               facet_grid(y_cat ~ x_cat, labeller = labeller(x_cat = countLabel)) +
