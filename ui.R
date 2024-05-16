@@ -106,7 +106,7 @@ ui <- dashboardPage(
                                   ))
                                 ),
                                
-                                selectInput(inputId = 'replicate', label = "Run", choices = c("-", "1", "2", "3"), selected = "-", multiple = FALSE),
+                                selectInput(inputId = 'replicate', label = "Run", choices = c("-", "1", "2", "3", "4", "5", "6"), selected = "-", multiple = FALSE),
                                 selectInput(inputId = 'blast_count', label = "Number of blasts", choices = c("-", "1", "2", "3", "6", "10", "20"), selected = "-", multiple = FALSE),
                                 selectInput(inputId = 'blast_length', label = "Blast length (seconds)", choices = c("-", "0.1", "1", "2", "4"), selected = "-", multiple = FALSE),
                                 checkboxInput(inputId = "move_value", label = "Blast location is moving", value = F),
@@ -199,7 +199,7 @@ ui <- dashboardPage(
                         ),
                         tabItem(tabName = "image_proc_tab",
                                 fluidRow(
-                                column(width = 2, selectInput(inputId = 'replicate_image', label = "Run", choices = c("-", "1", "2", "3"), selected = "-", multiple = FALSE)),
+                                column(width = 2, selectInput(inputId = 'replicate_image', label = "Run", choices = c("-", "1", "2", "3", "4", "5", "6"), selected = "-", multiple = FALSE)),
                                 column(width = 2, selectInput(inputId = 'blast_count_image', label = "Number of blasts", choices = c("0", "1", "2", "3", "6", "10", "20"), selected = "-", multiple = FALSE)),
                                 column(width = 2, selectInput(inputId = 'blast_length_image', label = "Blast length (seconds)", choices = c("-", "0.1", "1", "2", "4"), selected = "-", multiple = FALSE)),
                                 column(width = 2, selectInput(inputId = 'current_blast_image', label = "Current blast", choices = c("0", "1", "2", "3", "4", "5", "6", 

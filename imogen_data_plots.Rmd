@@ -1,0 +1,282 @@
+---
+title: "Imogen Data plots"
+author: "T. J. Nicholson"
+date: "2024-05-16"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
+library("data.table")
+library(reshape2)
+library(RColorBrewer)
+library(svglite)
+
+# modules
+source("background-colours.R")
+
+# functions
+
+source("utils.R")
+source("utils/dataInputClass.R")
+source("utils/plotClass.R")
+
+# global variables
+options(dplyr.summarise.inform = FALSE)
+
+load("tmp/mainData.Rda")
+load("data/zeroBlasts.Rda")
+load("tmp/metaData.Rda")
+load("tmp/imageClickData.Rda")
+```
+
+```{r scatterplot_all}
+progPlotData <- new(Class = "progressionPlotClass", blastData = blastData)
+progPlotData@bead_weight <- 0.03
+progPlotData@colours_prog <- c("yellow", "blue", "red")
+progPlotData@hideUnchanged <- "hide_unchanged"
+progPlotData@run <- c(3)
+progPlotData@blast_count <- c(0,1,2,3,6,10)
+progPlotData@blast_duration <- c(0.1)
+progPlotData@moving <- c(T,F)
+progPlotData@row_val <- c(1,2,3)
+progPlotData@col_val <- c(1,2,3)
+progPlotData@list.group <- as.list(c("blast_count", "move_val", "colour"))
+progPlotData <- selectData(progPlotData)
+progPlotData@simBlast <- simulateBlasts(progPlotData)
+progSummary <- summariseData(progPlotData)
+
+dat <- progSummary@progSummary
+dat <- dat %>% mutate(num.of.beads.shown = ifelse(blast_count == 0, 0, num.of.beads.shown))
+categories <- unique(unlist(dat["move_val"]))
+fullSet <- unlist(dat["move_val"])
+dat$shape_val <- NA
+counter <- 0
+print(categories)
+for(cat in categories){
+  counter <- counter + 1
+  dat$shape_val[fullSet == cat] <- as.character(cat)
+}
+  
+dat <- dat %>% mutate(colour_val = ifelse(colour == "yellow", "#FFF37D", ifelse(colour == "red", "#EE36BB", ifelse(colour == "blue", "#46ADC3", "#FFFFFF"))))
+dat <- dat %>% mutate(plot.id = paste0(colour_val, shape_val))
+
+    
+    p <- ggplot(data = dat, aes(x = blast_count, y = num.of.beads.shown, group = plot.id, shape = shape_val)) +
+      geom_point( color = dat$colour_val, size = 2)
+    
+    p <- p + theme_classic()
+    p
+
+
+  ggsave(filename = "~/Documents/imogen-geology/svg/blast_count-number_of_beads.svg", plot = p, device = "svg", , width = 160, height = 80, units = "mm")
+    
+```
+
+```{r scatterplot_optimal_scaled_depth}
+progPlotData <- new(Class = "progressionPlotClass", blastData = blastData)
+progPlotData@bead_weight <- 0.03
+progPlotData@colours_prog <- c("yellow", "blue", "red")
+progPlotData@hideUnchanged <- "hide_unchanged"
+progPlotData@run <- c(3)
+progPlotData@blast_count <- c(0,1,2,3,6,10)
+progPlotData@blast_duration <- c(0.1)
+progPlotData@moving <- c(F)
+progPlotData@row_val <- c(1,2,3)
+progPlotData@col_val <- c(1,2,3)
+progPlotData@list.group <- as.list(c("blast_count", "blast_duration", "run", "colour"))
+progPlotData <- selectData(progPlotData)
+progPlotData@simBlast <- simulateBlasts(progPlotData)
+progSummary <- summariseData(progPlotData)
+
+dat <- progSummary@progSummary
+dat <- dat %>% mutate(num.of.beads.shown = ifelse(blast_count == 0, 0, num.of.beads.shown))
+categories <- unique(unlist(dat["run"]))
+fullSet <- unlist(dat["run"])
+dat$shape_val <- NA
+counter <- 0
+print(categories)
+for(cat in categories){
+  counter <- counter + 1
+  dat$shape_val[fullSet == cat] <- as.character(cat)
+}
+  
+dat <- dat %>% mutate(colour_val = ifelse(colour == "yellow", "#FFF37D", ifelse(colour == "red", "#EE36BB", ifelse(colour == "blue", "#46ADC3", "#FFFFFF"))))
+dat <- dat %>% mutate(plot.id = paste0(colour_val, shape_val))
+
+    
+    p <- ggplot(data = dat, aes(x = blast_count, y = num.of.beads.shown, group = plot.id, shape = shape_val)) +
+      geom_point( color = dat$colour_val, size = 2)
+    
+    p <- p + theme_classic()
+    p
+
+
+  ggsave(filename = "~/Documents/imogen-geology/svg/blast_count-number_of_beads_optimal_scaled_depth_discrete_blast.svg", plot = p, device = "svg", , width = 160, height = 80, units = "mm")
+```
+
+
+
+```{r red}
+progPlotData <- new(Class = "progressionPlotClass", blastData = blastData)
+progPlotData@bead_weight <- 0.03
+progPlotData@colours_prog <- c("red")
+progPlotData@hideUnchanged <- "show_unchanged"
+progPlotData@run <- c(3)
+progPlotData@blast_count <- c(0,1,2,3,6,10,20)
+progPlotData@blast_duration <- c(0.1, 1,2,4)
+progPlotData@moving <- c(F)
+progPlotData@row_val <- c(1,2,3)
+progPlotData@col_val <- c(1,2,3)
+progPlotData@list.group <- as.list(c("blast_count", "move_val", "colour"))
+progPlotData <- selectData(progPlotData)
+progPlotData@simBlast <- simulateBlasts(progPlotData)
+progSummary <- summariseData(progPlotData)
+progPlotData <- generatePlot(progPlotData)
+
+progPlotData@p
+
+  ggsave(filename = "~/Documents/imogen-geology/svg/sim-plot-red.svg", plot = progPlotData@p[[1]], device = "svg", , width = 160, height = 80, units = "mm")
+
+```
+
+```{r yellow}
+progPlotData <- new(Class = "progressionPlotClass", blastData = blastData)
+progPlotData@bead_weight <- 0.03
+progPlotData@colours_prog <- c("yellow")
+progPlotData@hideUnchanged <- "show_unchanged"
+progPlotData@run <- c(3)
+progPlotData@blast_count <- c(0,1,2,3,6,10,20)
+progPlotData@blast_duration <- c(0.1, 1,2,4)
+progPlotData@moving <- c(F)
+progPlotData@row_val <- c(1,2,3)
+progPlotData@col_val <- c(1,2,3)
+progPlotData@list.group <- as.list(c("blast_count", "move_val", "colour"))
+progPlotData <- selectData(progPlotData)
+progPlotData@simBlast <- simulateBlasts(progPlotData)
+progSummary <- summariseData(progPlotData)
+progPlotData <- generatePlot(progPlotData)
+
+progPlotData@p[[1]]
+
+  ggsave(filename = "~/Documents/imogen-geology/svg/sim-plot-yellow.svg", plot = progPlotData@p[[1]], device = "svg", , width = 160, height = 80, units = "mm")
+
+```
+
+```{r blue}
+progPlotData <- new(Class = "progressionPlotClass", blastData = blastData)
+progPlotData@bead_weight <- 0.03
+progPlotData@colours_prog <- c("blue")
+progPlotData@hideUnchanged <- "show_unchanged"
+progPlotData@run <- c(3)
+progPlotData@blast_count <- c(0,1,2,3,6,10,20)
+progPlotData@blast_duration <- c(0.1, 1,2,4)
+progPlotData@moving <- c(T,F)
+progPlotData@row_val <- c(1,2,3)
+progPlotData@col_val <- c(1,2,3)
+progPlotData@list.group <- as.list(c("blast_count", "move_val", "colour"))
+progPlotData <- selectData(progPlotData)
+progPlotData@simBlast <- simulateBlasts(progPlotData)
+progSummary <- summariseData(progPlotData)
+progPlotData <- generatePlot(progPlotData)
+
+progPlotData@p
+
+  ggsave(filename = "~/Documents/imogen-geology/svg/sim-plot-blue.svg", plot = progPlotData@p[[1]], device = "svg", , width = 160, height = 80, units = "mm")
+
+```
+
+```{r barplots_discrete_bottom}
+
+barPlotData <- new(Class = "allBarPlotsClass", blastData = blastData)
+barPlotData@moving <- c(F)
+barPlotData@stack_colours <- T
+barPlotData@blast_duration <- c(0.1)
+barPlotData@blast_count <- c(1,2,3,6,10,20)
+barPlotData@run <- c(3)
+barPlotData@combine_replicates <- T
+barPlotData <- selectData(barPlotData)
+barPlotData <- generatePlot(barPlotData)
+
+p <- barPlotData@p[[1]]
+
+p
+  ggsave(filename = "~/Documents/imogen-geology/svg/barplot_discrete_bottom.svg", plot = p, device = "svg", , width = 160, height = 80, units = "mm")
+
+
+```
+
+```{r red_tephra_ring}
+progPlotData <- new(Class = "progressionPlotClass", blastData = blastData)
+progPlotData@bead_weight <- 0.03
+progPlotData@colours_prog <- c("red")
+progPlotData@hideUnchanged <- "show_unchanged"
+progPlotData@run <- c(5)
+progPlotData@blast_count <- c(0,1,2,3,6,10,20)
+progPlotData@blast_duration <- c(0.1, 1,2,4)
+progPlotData@moving <- c(F)
+progPlotData@row_val <- c(1,2,3)
+progPlotData@col_val <- c(1,2,3)
+progPlotData@list.group <- as.list(c("blast_count", "move_val", "colour"))
+progPlotData <- selectData(progPlotData)
+progPlotData@simBlast <- simulateBlasts(progPlotData)
+progSummary <- summariseData(progPlotData)
+progPlotData <- generatePlot(progPlotData)
+
+progPlotData@p
+
+  ggsave(filename = "~/Documents/imogen-geology/svg/sim-plot-red_tephra_ring.svg", plot = progPlotData@p[[1]], device = "svg", , width = 160, height = 80, units = "mm")
+
+```
+
+```{r yellow_tephra_ring}
+progPlotData <- new(Class = "progressionPlotClass", blastData = blastData)
+progPlotData@bead_weight <- 0.03
+progPlotData@colours_prog <- c("yellow")
+progPlotData@hideUnchanged <- "show_unchanged"
+progPlotData@run <- c(5)
+progPlotData@blast_count <- c(0,1,2,3,6,10,20)
+progPlotData@blast_duration <- c(0.1, 1,2,4)
+progPlotData@moving <- c(F)
+progPlotData@row_val <- c(1,2,3)
+progPlotData@col_val <- c(1,2,3)
+progPlotData@list.group <- as.list(c("blast_count", "move_val", "colour"))
+progPlotData <- selectData(progPlotData)
+progPlotData@simBlast <- simulateBlasts(progPlotData)
+progSummary <- summariseData(progPlotData)
+progPlotData <- generatePlot(progPlotData)
+
+progPlotData@p[[1]]
+
+  ggsave(filename = "~/Documents/imogen-geology/svg/sim-plot-yellow_tephra_ring.svg", plot = progPlotData@p[[1]], device = "svg", , width = 160, height = 80, units = "mm")
+
+```
+
+```{r blue_tephra_ring}
+progPlotData <- new(Class = "progressionPlotClass", blastData = blastData)
+progPlotData@bead_weight <- 0.03
+progPlotData@colours_prog <- c("blue")
+progPlotData@hideUnchanged <- "show_unchanged"
+progPlotData@run <- c(5)
+progPlotData@blast_count <- c(0,1,2,3,6,10,20)
+progPlotData@blast_duration <- c(0.1, 1,2,4)
+progPlotData@moving <- c(T,F)
+progPlotData@row_val <- c(1,2,3)
+progPlotData@col_val <- c(1,2,3)
+progPlotData@list.group <- as.list(c("blast_count", "move_val", "colour"))
+progPlotData <- selectData(progPlotData)
+progPlotData@simBlast <- simulateBlasts(progPlotData)
+progSummary <- summariseData(progPlotData)
+progPlotData <- generatePlot(progPlotData)
+
+progPlotData@p
+
+  ggsave(filename = "~/Documents/imogen-geology/svg/sim-plot-blue_tephra_ring.svg", plot = progPlotData@p[[1]], device = "svg", , width = 160, height = 80, units = "mm")
+
+```
+
